@@ -1,0 +1,1063 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Онлайн запись | The Cut</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-dark: #a07830;
+      --gold-light: #dab95c;
+      --gold-muted: rgba(201,168,76,.08);
+      --gold-border: rgba(201,168,76,.2);
+      --bg: #0f0f0f;
+      --bg-card: #161616;
+      --bg-sec: #1a1a1a;
+      --border: rgba(255,255,255,.07);
+      --text: #f0e8d0;
+      --muted: #7a7060;
+      --dim: #4a4540;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .book-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(15,15,15,.95); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .book-logo { display: flex; align-items: center; gap: .75rem; }
+    .book-logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--gold-muted); border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 1.1rem;
+    }
+    .book-logo-name {
+      font-size: 1.1rem; font-weight: 800; letter-spacing: .08em;
+      color: var(--gold);
+    }
+    .book-logo-sub { font-size: .65rem; color: var(--muted); letter-spacing: .15em; text-transform: uppercase; }
+    .back-link {
+      font-size: .8rem; color: var(--muted); text-decoration: none;
+      display: flex; align-items: center; gap: .35rem;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--gold); }
+
+    /* ── Progress bar ── */
+    .progress-bar-wrap {
+      padding: 1.25rem 1.5rem .5rem;
+      max-width: 780px; margin: 0 auto;
+    }
+    .progress-steps {
+      display: flex; align-items: center; gap: 0;
+    }
+    .ps-item {
+      display: flex; align-items: center; flex: 1;
+    }
+    .ps-item:last-child { flex: 0; }
+    .ps-dot {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; color: var(--muted);
+      transition: all .3s; background: var(--bg-sec);
+      position: relative; z-index: 1;
+    }
+    .ps-dot.done {
+      background: var(--gold); border-color: var(--gold);
+      color: #0a0a0a;
+    }
+    .ps-dot.active {
+      border-color: var(--gold); color: var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,168,76,.12);
+    }
+    .ps-label {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); margin-top: .35rem; text-align: center;
+      transition: color .3s;
+    }
+    .ps-label.active { color: var(--gold); }
+    .ps-line {
+      flex: 1; height: 2px; background: var(--border);
+      margin: 0 4px; transition: background .3s;
+    }
+    .ps-line.done { background: var(--gold); }
+    .ps-dot-wrap { display: flex; flex-direction: column; align-items: center; }
+
+    /* ── Main container ── */
+    .book-container {
+      max-width: 780px; margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    /* ── Step header ── */
+    .step-title {
+      font-size: 1.3rem; font-weight: 700; color: var(--text);
+      margin-bottom: .3rem;
+    }
+    .step-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+    /* ── Step panels ── */
+    .step-panel { display: none; animation: fadeUp .25s ease; }
+    .step-panel.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Master cards ── */
+    .masters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .master-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.25rem;
+      cursor: pointer; transition: all .2s;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .master-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 16px;
+      border: 2px solid transparent; transition: border-color .2s; pointer-events: none;
+    }
+    .master-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+    .master-card:hover::before, .master-card.selected::before { border-color: var(--gold); }
+    .master-card.selected { background: rgba(201,168,76,.06); }
+    .master-avatar {
+      width: 80px; height: 80px; border-radius: 50%; overflow: hidden;
+      border: 2px solid var(--gold-border); margin-bottom: .9rem;
+      background: var(--bg-sec); display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; color: var(--muted); flex-shrink: 0;
+    }
+    .master-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .master-name { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .2rem; }
+    .master-spec { font-size: .75rem; color: var(--muted); margin-bottom: .5rem; }
+    .master-rating {
+      display: flex; gap: 2px; justify-content: center; align-items: center;
+    }
+    .master-rating i { font-size: .7rem; color: var(--gold); }
+    .master-rating span { font-size: .72rem; color: var(--muted); margin-left: .25rem; }
+    .master-selected-badge {
+      position: absolute; top: .6rem; right: .6rem;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--gold); display: none;
+      align-items: center; justify-content: center;
+      font-size: .65rem; color: #0a0a0a;
+    }
+    .master-card.selected .master-selected-badge { display: flex; }
+
+    /* ── Service cards ── */
+    .services-list { display: flex; flex-direction: column; gap: .6rem; }
+    .service-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: .9rem 1.1rem;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; gap: 1rem;
+      position: relative; overflow: hidden;
+    }
+    .service-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: transparent; transition: background .2s;
+    }
+    .service-card:hover::before, .service-card.selected::before { background: var(--gold); }
+    .service-card:hover { background: rgba(201,168,76,.04); }
+    .service-card.selected { background: rgba(201,168,76,.06); border-color: var(--gold-border); }
+    .service-icon {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      background: var(--gold-muted); border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: 1.1rem;
+    }
+    .service-info { flex: 1; min-width: 0; }
+    .service-name { font-size: .9rem; font-weight: 600; color: var(--text); }
+    .service-desc { font-size: .75rem; color: var(--muted); margin-top: .1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .service-meta { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+    .service-duration {
+      font-size: .75rem; color: var(--muted);
+      display: flex; align-items: center; gap: .3rem;
+    }
+    .service-price {
+      font-size: 1rem; font-weight: 700; color: var(--gold);
+      white-space: nowrap;
+    }
+    .service-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; color: #0a0a0a; transition: all .2s;
+    }
+    .service-card.selected .service-check {
+      background: var(--gold); border-color: var(--gold);
+    }
+    .category-label {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); margin: 1rem 0 .5rem;
+    }
+    .category-label:first-child { margin-top: 0; }
+
+    /* ── Date & Time ── */
+    .datetime-wrap { display: grid; grid-template-columns: auto 1fr; gap: 1.5rem; }
+    @media (max-width: 560px) { .datetime-wrap { grid-template-columns: 1fr; } }
+
+    /* Mini calendar */
+    .mini-cal {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1rem; width: 260px; flex-shrink: 0;
+    }
+    @media (max-width: 560px) { .mini-cal { width: 100%; } }
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .8rem;
+    }
+    .cal-nav-btn {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .2s; font-size: .85rem;
+    }
+    .cal-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .cal-month { font-size: .85rem; font-weight: 700; color: var(--text); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-day-name {
+      text-align: center; font-size: .62rem; color: var(--dim);
+      text-transform: uppercase; padding: .2rem 0 .4rem;
+    }
+    .cal-day {
+      text-align: center; font-size: .78rem; padding: .3rem 0;
+      border-radius: 7px; cursor: pointer; transition: all .15s;
+      color: var(--muted);
+    }
+    .cal-day:hover:not(.empty):not(.past):not(.disabled) {
+      background: var(--gold-muted); color: var(--gold);
+    }
+    .cal-day.today { color: var(--text); font-weight: 700; }
+    .cal-day.selected { background: var(--gold); color: #0a0a0a; font-weight: 700; }
+    .cal-day.past { color: var(--dim); cursor: not-allowed; }
+    .cal-day.empty { cursor: default; }
+    .cal-day.disabled { color: var(--dim); cursor: not-allowed; }
+
+    /* Time slots */
+    .slots-wrap {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1rem;
+    }
+    .slots-title { font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: .75rem; }
+    .slots-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: .5rem;
+    }
+    .slot-btn {
+      padding: .45rem .25rem; border-radius: 9px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text); font-size: .82rem; font-weight: 600;
+      cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .slot-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-muted); }
+    .slot-btn.selected { background: var(--gold); border-color: var(--gold); color: #0a0a0a; }
+    .slots-empty {
+      color: var(--muted); font-size: .82rem; padding: 1rem 0; text-align: center;
+    }
+    .slots-loading {
+      color: var(--muted); font-size: .82rem; padding: 1rem 0; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+    }
+    .spinner-sm {
+      width: 16px; height: 16px; border: 2px solid var(--border);
+      border-top-color: var(--gold); border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Contact form ── */
+    .contact-form { max-width: 480px; }
+    .cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 480px) { .cf-row { grid-template-columns: 1fr; } }
+    .cf-group { display: flex; flex-direction: column; gap: .4rem; }
+    .cf-label {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); font-weight: 600;
+    }
+    .cf-input {
+      background: var(--bg-sec); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px;
+      padding: .65rem .9rem; font-size: .88rem;
+      transition: border-color .2s; outline: none; width: 100%;
+    }
+    .cf-input:focus { border-color: var(--gold-border); }
+    .cf-input::placeholder { color: var(--dim); }
+    .cf-textarea {
+      background: var(--bg-sec); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px;
+      padding: .65rem .9rem; font-size: .88rem;
+      transition: border-color .2s; outline: none;
+      resize: none; width: 100%; height: 80px;
+    }
+    .cf-textarea:focus { border-color: var(--gold-border); }
+
+    /* ── Booking summary ── */
+    .booking-summary {
+      background: var(--bg-card); border: 1px solid var(--gold-border);
+      border-radius: 14px; padding: 1.1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .summary-title {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: .75rem;
+    }
+    .summary-row {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .35rem 0;
+    }
+    .summary-row + .summary-row { border-top: 1px solid var(--border); }
+    .summary-icon { color: var(--gold); font-size: .85rem; width: 16px; flex-shrink: 0; }
+    .summary-val { font-size: .85rem; color: var(--text); font-weight: 500; }
+    .summary-price { color: var(--gold); font-weight: 700; }
+
+    /* ── Navigation buttons ── */
+    .step-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 2rem; gap: 1rem;
+    }
+    .btn-back {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); border-radius: 10px;
+      padding: .65rem 1.25rem; font-size: .85rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .btn-back:hover { border-color: var(--gold-border); color: var(--gold); }
+    .btn-next {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      border: none; color: #0a0a0a; border-radius: 10px;
+      padding: .65rem 1.75rem; font-size: .9rem; font-weight: 700;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; gap: .5rem;
+      box-shadow: 0 4px 20px rgba(201,168,76,.3);
+    }
+    .btn-next:hover {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      box-shadow: 0 6px 24px rgba(201,168,76,.45);
+      transform: translateY(-1px);
+    }
+    .btn-next:disabled {
+      opacity: .35; cursor: not-allowed; transform: none;
+      box-shadow: none;
+    }
+
+    /* ── Success screen ── */
+    #successScreen {
+      display: none; text-align: center;
+      padding: 3rem 1rem; max-width: 480px; margin: 0 auto;
+    }
+    .success-icon {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: rgba(25,135,84,.15); border: 2px solid rgba(25,135,84,.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; color: #4caf81; margin: 0 auto 1.5rem;
+      animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .success-title {
+      font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: .5rem;
+    }
+    .success-sub { font-size: .88rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.6; }
+    .success-card {
+      background: var(--bg-card); border: 1px solid var(--gold-border);
+      border-radius: 16px; padding: 1.25rem 1.5rem; text-align: left;
+      margin-bottom: 1.75rem;
+    }
+    .success-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .4rem 0; font-size: .85rem;
+    }
+    .success-row + .success-row { border-top: 1px solid var(--border); }
+    .success-row .lbl { color: var(--muted); }
+    .success-row .val { color: var(--text); font-weight: 600; }
+    .success-row .val.gold { color: var(--gold); }
+    .btn-book-again {
+      background: var(--gold-muted); border: 1px solid var(--gold-border);
+      color: var(--gold); border-radius: 10px;
+      padding: .65rem 1.5rem; font-size: .88rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-book-again:hover { background: rgba(201,168,76,.15); }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .book-header { padding: .9rem 1rem; }
+      .book-logo-name { font-size: .95rem; }
+      .progress-bar-wrap { padding: 1rem 1rem .25rem; }
+      .ps-dot { width: 26px; height: 26px; font-size: .68rem; }
+      .ps-label { font-size: .58rem; letter-spacing: 0; }
+      .book-container { padding: 1rem .75rem 3rem; }
+      .step-title { font-size: 1.1rem; }
+      .masters-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
+      .master-card { padding: .9rem .75rem; }
+      .master-avatar { width: 60px; height: 60px; font-size: 1.4rem; }
+      .master-name { font-size: .82rem; }
+      .service-card { padding: .75rem .85rem; gap: .7rem; }
+      .service-icon { width: 36px; height: 36px; font-size: .95rem; }
+      .service-name { font-size: .83rem; }
+      .service-price { font-size: .9rem; }
+      .service-duration { font-size: .7rem; }
+      .mini-cal { padding: .75rem; }
+      .slots-wrap { padding: .75rem; }
+      .slots-grid { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: .4rem; }
+      .slot-btn { font-size: .78rem; padding: .4rem .2rem; }
+      .booking-summary { padding: .9rem 1rem; }
+      .cf-row { grid-template-columns: 1fr; gap: .75rem; }
+      .step-nav { margin-top: 1.5rem; }
+      .btn-next, .btn-back { padding: .55rem 1rem; font-size: .83rem; }
+      .success-card { padding: .9rem 1rem; }
+    }
+    @media (max-width: 375px) {
+      .ps-label { display: none; }
+    }
+
+    /* ── BG deco ── */
+    .bg-deco {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .bg-deco-c {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,.05) 0%, transparent 65%);
+    }
+    .bg-deco-c-1 { width: 700px; height: 700px; top: -200px; right: -200px; }
+    .bg-deco-c-2 { width: 500px; height: 500px; bottom: -100px; left: -150px; }
+
+    .book-inner { position: relative; z-index: 1; }
+
+    /* loading overlay */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(10,10,10,.8);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; display: none;
+    }
+    .loading-inner { text-align: center; }
+    .loading-spinner {
+      width: 48px; height: 48px; border: 3px solid var(--border);
+      border-top-color: var(--gold); border-radius: 50%;
+      animation: spin .7s linear infinite; margin: 0 auto 1rem;
+    }
+    .loading-text { color: var(--muted); font-size: .85rem; }
+
+    /* Error toast */
+    .err-toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: rgba(220,53,69,.15); border: 1px solid rgba(220,53,69,.35);
+      color: #f77; border-radius: 10px; padding: .65rem 1.25rem;
+      font-size: .83rem; z-index: 500; display: none;
+      align-items: center; gap: .5rem; white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-deco">
+  <div class="bg-deco-c bg-deco-c-1"></div>
+  <div class="bg-deco-c bg-deco-c-2"></div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-inner">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Подождите...</div>
+  </div>
+</div>
+
+<!-- Error toast -->
+<div class="err-toast" id="errToast">
+  <i class="bi bi-exclamation-circle-fill"></i>
+  <span id="errMsg">Произошла ошибка</span>
+</div>
+
+<div class="book-inner">
+  <!-- Header -->
+  <header class="book-header">
+    <div class="book-logo">
+      <div class="book-logo-icon"><i class="bi bi-scissors"></i></div>
+      <div>
+        <div class="book-logo-name">THE CUT</div>
+        <div class="book-logo-sub">Barbershop</div>
+      </div>
+    </div>
+    <a href="/accounts/login/" class="back-link">
+      <i class="bi bi-arrow-left"></i> Назад
+    </a>
+  </header>
+
+  <!-- Progress -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-steps">
+      <div class="ps-item">
+        <div class="ps-dot-wrap">
+          <div class="ps-dot active" id="dot1">1</div>
+          <div class="ps-label active" id="lbl1">Мастер</div>
+        </div>
+        <div class="ps-line" id="line1"></div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-dot-wrap">
+          <div class="ps-dot" id="dot2">2</div>
+          <div class="ps-label" id="lbl2">Услуга</div>
+        </div>
+        <div class="ps-line" id="line2"></div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-dot-wrap">
+          <div class="ps-dot" id="dot3">3</div>
+          <div class="ps-label" id="lbl3">Дата и время</div>
+        </div>
+        <div class="ps-line" id="line3"></div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-dot-wrap">
+          <div class="ps-dot" id="dot4">4</div>
+          <div class="ps-label" id="lbl4">Контакты</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="book-container">
+
+    <!-- ══ STEP 1: Master ══ -->
+    <div class="step-panel active" id="step1">
+      <div class="step-title">Выберите мастера</div>
+      <div class="step-sub">Все наши специалисты — профессионалы с многолетним опытом</div>
+      <div class="masters-grid" id="mastersGrid">
+        <div class="slots-loading"><div class="spinner-sm"></div> Загружаем мастеров...</div>
+      </div>
+      <div class="step-nav">
+        <div></div>
+        <button class="btn-next" id="btnNext1" disabled onclick="goStep(2)">
+          Далее <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ STEP 2: Service ══ -->
+    <div class="step-panel" id="step2">
+      <div class="step-title">Выберите услугу</div>
+      <div class="step-sub" id="step2Sub">Услуги выбранного мастера</div>
+      <div id="servicesList"></div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> Назад</button>
+        <button class="btn-next" id="btnNext2" disabled onclick="goStep(3)">
+          Далее <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ STEP 3: Date & Time ══ -->
+    <div class="step-panel" id="step3">
+      <div class="step-title">Выберите дату и время</div>
+      <div class="step-sub">Доступные слоты обновляются в реальном времени</div>
+      <div class="datetime-wrap">
+        <!-- Calendar -->
+        <div class="mini-cal">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" id="calPrev" onclick="calNav(-1)"><i class="bi bi-chevron-left"></i></button>
+            <div class="cal-month" id="calMonthLabel"></div>
+            <button class="cal-nav-btn" id="calNext" onclick="calNav(1)"><i class="bi bi-chevron-right"></i></button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <!-- Slots -->
+        <div class="slots-wrap">
+          <div class="slots-title" id="slotsTitle">Выберите дату</div>
+          <div id="slotsContainer"><div class="slots-empty">Сначала выберите дату</div></div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goStep(2)"><i class="bi bi-arrow-left"></i> Назад</button>
+        <button class="btn-next" id="btnNext3" disabled onclick="goStep(4)">
+          Далее <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ STEP 4: Contacts ══ -->
+    <div class="step-panel" id="step4">
+      <div class="step-title">Ваши контакты</div>
+      <div class="step-sub">Мы пришлём подтверждение записи</div>
+
+      <!-- Summary -->
+      <div class="booking-summary">
+        <div class="summary-title">Ваша запись</div>
+        <div class="summary-row">
+          <i class="bi bi-person-fill summary-icon"></i>
+          <span class="summary-val" id="sumMaster">—</span>
+        </div>
+        <div class="summary-row">
+          <i class="bi bi-scissors summary-icon"></i>
+          <span class="summary-val" id="sumService">—</span>
+        </div>
+        <div class="summary-row">
+          <i class="bi bi-calendar3 summary-icon"></i>
+          <span class="summary-val" id="sumDateTime">—</span>
+        </div>
+        <div class="summary-row">
+          <i class="bi bi-cash-coin summary-icon"></i>
+          <span class="summary-val summary-price" id="sumPrice">—</span>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="contact-form">
+        <div class="cf-row">
+          <div class="cf-group">
+            <label class="cf-label">Фамилия *</label>
+            <input type="text" class="cf-input" id="cfLastName" placeholder="Иванов">
+          </div>
+          <div class="cf-group">
+            <label class="cf-label">Имя *</label>
+            <input type="text" class="cf-input" id="cfFirstName" placeholder="Иван">
+          </div>
+        </div>
+        <div class="cf-group" style="margin-bottom:1rem">
+          <label class="cf-label">Телефон *</label>
+          <input type="tel" class="cf-input" id="cfPhone" placeholder="+7 (999) 123-45-67">
+        </div>
+        <div class="cf-group" style="margin-bottom:.5rem">
+          <label class="cf-label">Комментарий</label>
+          <textarea class="cf-textarea" id="cfNotes" placeholder="Пожелания или уточнения..."></textarea>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-back" onclick="goStep(3)"><i class="bi bi-arrow-left"></i> Назад</button>
+        <button class="btn-next" id="btnSubmit" onclick="submitBooking()">
+          <i class="bi bi-check2-circle"></i> Записаться
+        </button>
+      </div>
+    </div>
+
+  </div><!-- .book-container -->
+
+  <!-- ══ SUCCESS ══ -->
+  <div id="successScreen">
+    <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+    <div class="success-title">Запись создана!</div>
+    <div class="success-sub">Ждём вас. Если планы изменятся — пожалуйста, сообщите нам заранее.</div>
+    <div class="success-card">
+      <div class="success-row"><span class="lbl">Мастер</span><span class="val" id="succMaster"></span></div>
+      <div class="success-row"><span class="lbl">Услуга</span><span class="val" id="succService"></span></div>
+      <div class="success-row"><span class="lbl">Дата</span><span class="val" id="succDate"></span></div>
+      <div class="success-row"><span class="lbl">Время</span><span class="val" id="succTime"></span></div>
+      <div class="success-row"><span class="lbl">Стоимость</span><span class="val gold" id="succPrice"></span></div>
+    </div>
+    <button class="btn-book-again" onclick="resetBooking()">
+      <i class="bi bi-plus-circle me-1"></i> Записаться ещё раз
+    </button>
+  </div>
+</div><!-- .book-inner -->
+
+<script>
+// ────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────
+const state = {
+  masterId: null, masterName: null,
+  serviceId: null, serviceName: null, servicePrice: null, serviceDuration: null,
+  date: null, time: null,
+  calYear: null, calMonth: null,
+};
+
+const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                   'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DAYS_RU   = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+// ────────────────────────────────────────────
+// Step navigation
+// ────────────────────────────────────────────
+let currentStep = 1;
+
+function goStep(n) {
+  document.getElementById('step' + currentStep).classList.remove('active');
+  document.getElementById('step' + n).classList.add('active');
+  currentStep = n;
+  updateProgress();
+  if (n === 3) initCalendar();
+  if (n === 4) updateSummary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    const lbl = document.getElementById('lbl' + i);
+    const line = document.getElementById('line' + i);
+    dot.classList.remove('active', 'done');
+    lbl.classList.remove('active');
+    if (line) line.classList.remove('done');
+
+    if (i < currentStep) {
+      dot.classList.add('done');
+      dot.innerHTML = '<i class="bi bi-check-lg" style="font-size:.7rem"></i>';
+      if (line) line.classList.add('done');
+    } else if (i === currentStep) {
+      dot.classList.add('active');
+      dot.innerHTML = i;
+      lbl.classList.add('active');
+    } else {
+      dot.innerHTML = i;
+    }
+  }
+}
+
+// ────────────────────────────────────────────
+// Error toast
+// ────────────────────────────────────────────
+function showErr(msg) {
+  const t = document.getElementById('errToast');
+  document.getElementById('errMsg').textContent = msg;
+  t.style.display = 'flex';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ────────────────────────────────────────────
+// Step 1 — Masters
+// ────────────────────────────────────────────
+async function loadMasters() {
+  try {
+    const res = await fetch('/book/api/masters/');
+    const data = await res.json();
+    renderMasters(data.masters);
+  } catch (e) {
+    document.getElementById('mastersGrid').innerHTML =
+      '<div class="slots-empty">Не удалось загрузить мастеров</div>';
+  }
+}
+
+function renderMasters(masters) {
+  const grid = document.getElementById('mastersGrid');
+  if (!masters.length) {
+    grid.innerHTML = '<div class="slots-empty">Нет доступных мастеров</div>';
+    return;
+  }
+  grid.innerHTML = masters.map(m => {
+    const stars = Array.from({length: 5}, (_, i) =>
+      `<i class="bi bi-star${i < Math.round(m.rating) ? '-fill' : ''}"></i>`
+    ).join('');
+    const avatar = m.photo
+      ? `<img src="${m.photo}" alt="${m.name}">`
+      : `<i class="bi bi-person-fill"></i>`;
+    const spec = m.specs.length ? m.specs.join(', ') : 'Барбер';
+    return `
+      <div class="master-card" data-id="${m.id}" data-name="${m.name}" onclick="selectMaster(this)">
+        <div class="master-selected-badge"><i class="bi bi-check-lg"></i></div>
+        <div class="master-avatar">${avatar}</div>
+        <div class="master-name">${m.name}</div>
+        <div class="master-spec">${spec}</div>
+        <div class="master-rating">${stars}<span>${m.rating.toFixed(1)}</span></div>
+      </div>`;
+  }).join('');
+}
+
+function selectMaster(el) {
+  document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.masterId = el.dataset.id;
+  state.masterName = el.dataset.name;
+  document.getElementById('btnNext1').disabled = false;
+  // Reset downstream
+  state.serviceId = null; state.date = null; state.time = null;
+}
+
+// ────────────────────────────────────────────
+// Step 2 — Services
+// ────────────────────────────────────────────
+async function loadServices() {
+  const list = document.getElementById('servicesList');
+  list.innerHTML = '<div class="slots-loading"><div class="spinner-sm"></div> Загружаем услуги...</div>';
+  document.getElementById('step2Sub').textContent = 'Услуги мастера ' + state.masterName;
+  try {
+    const res = await fetch(`/book/api/masters/${state.masterId}/services/`);
+    const data = await res.json();
+    renderServices(data.services);
+  } catch(e) {
+    list.innerHTML = '<div class="slots-empty">Не удалось загрузить услуги</div>';
+  }
+}
+
+function renderServices(services) {
+  const list = document.getElementById('servicesList');
+  if (!services.length) {
+    list.innerHTML = '<div class="slots-empty">У мастера нет доступных услуг</div>';
+    return;
+  }
+  // Group by category
+  const groups = {};
+  services.forEach(s => {
+    if (!groups[s.category]) groups[s.category] = [];
+    groups[s.category].push(s);
+  });
+  let html = '<div class="services-list">';
+  Object.entries(groups).forEach(([cat, svcList]) => {
+    html += `<div class="category-label">${cat}</div>`;
+    svcList.forEach(s => {
+      const price = s.price % 1 === 0 ? s.price.toFixed(0) : s.price.toFixed(2);
+      html += `
+        <div class="service-card" data-id="${s.id}" data-name="${s.name}"
+             data-price="${s.price}" data-duration="${s.duration}"
+             onclick="selectService(this)">
+          <div class="service-icon"><i class="bi bi-scissors"></i></div>
+          <div class="service-info">
+            <div class="service-name">${s.name}</div>
+            ${s.description ? `<div class="service-desc">${s.description}</div>` : ''}
+          </div>
+          <div class="service-meta">
+            <div class="service-duration"><i class="bi bi-clock"></i> ${s.duration_display}</div>
+            <div class="service-price">${price} ₽</div>
+          </div>
+          <div class="service-check"><i class="bi bi-check-lg"></i></div>
+        </div>`;
+    });
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function selectService(el) {
+  document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.serviceId   = el.dataset.id;
+  state.serviceName = el.dataset.name;
+  state.servicePrice = parseFloat(el.dataset.price);
+  state.serviceDuration = parseInt(el.dataset.duration);
+  document.getElementById('btnNext2').disabled = false;
+  // Reset downstream
+  state.date = null; state.time = null;
+}
+
+// ────────────────────────────────────────────
+// Step 3 — Calendar + Slots
+// ────────────────────────────────────────────
+function initCalendar() {
+  const now = new Date();
+  if (!state.calYear) {
+    state.calYear  = now.getFullYear();
+    state.calMonth = now.getMonth();
+  }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const y = state.calYear, m = state.calMonth;
+  document.getElementById('calMonthLabel').textContent = MONTHS_RU[m] + ' ' + y;
+
+  const grid = document.getElementById('calGrid');
+  // Day names header
+  let html = DAYS_RU.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+
+  const firstDay = new Date(y, m, 1).getDay(); // 0=Sun
+  const offset   = firstDay === 0 ? 6 : firstDay - 1; // Mon-based offset
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(today); maxDate.setDate(today.getDate() + 60);
+
+  // Empty cells
+  for (let i = 0; i < offset; i++) html += '<div class="cal-day empty"></div>';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const thisDate = new Date(y, m, d);
+    const dateStr  = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls = 'cal-day';
+    if (thisDate < today || thisDate > maxDate) cls += ' past';
+    if (thisDate.getTime() === today.getTime()) cls += ' today';
+    if (state.date === dateStr) cls += ' selected';
+    const clickable = thisDate >= today && thisDate <= maxDate;
+    html += `<div class="${cls}"${clickable ? ` onclick="selectDate('${dateStr}')"` : ''}>${d}</div>`;
+  }
+  grid.innerHTML = html;
+
+  // Prev button — disable if current month is today's month
+  const nowM = new Date();
+  document.getElementById('calPrev').disabled = (y === nowM.getFullYear() && m === nowM.getMonth());
+}
+
+function calNav(dir) {
+  state.calMonth += dir;
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
+  renderCalendar();
+}
+
+async function selectDate(dateStr) {
+  state.date = dateStr;
+  state.time = null;
+  document.getElementById('btnNext3').disabled = true;
+  renderCalendar();
+
+  // Human-readable date for title
+  const [y, mo, d] = dateStr.split('-');
+  document.getElementById('slotsTitle').textContent =
+    `Свободное время — ${d} ${MONTHS_RU[parseInt(mo)-1]}`;
+
+  const cont = document.getElementById('slotsContainer');
+  cont.innerHTML = '<div class="slots-loading"><div class="spinner-sm"></div> Ищем слоты...</div>';
+
+  try {
+    const res = await fetch(
+      `/book/api/masters/${state.masterId}/slots/?date=${dateStr}&service_id=${state.serviceId}`
+    );
+    const data = await res.json();
+    renderSlots(data.slots || []);
+  } catch(e) {
+    cont.innerHTML = '<div class="slots-empty">Ошибка загрузки</div>';
+  }
+}
+
+function renderSlots(slots) {
+  const cont = document.getElementById('slotsContainer');
+  if (!slots.length) {
+    cont.innerHTML = '<div class="slots-empty">Нет свободных окон на этот день</div>';
+    return;
+  }
+  cont.innerHTML = `<div class="slots-grid">` +
+    slots.map(t => `<button class="slot-btn" data-time="${t}" onclick="selectSlot(this)">${t}</button>`).join('') +
+    `</div>`;
+}
+
+function selectSlot(btn) {
+  document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.time = btn.dataset.time;
+  document.getElementById('btnNext3').disabled = false;
+}
+
+// ────────────────────────────────────────────
+// Step 4 — Summary + Contact
+// ────────────────────────────────────────────
+function updateSummary() {
+  document.getElementById('sumMaster').textContent  = state.masterName;
+  document.getElementById('sumService').textContent = state.serviceName;
+  const [y, mo, d] = state.date.split('-');
+  document.getElementById('sumDateTime').textContent =
+    `${d} ${MONTHS_RU[parseInt(mo)-1]} ${y}, ${state.time}`;
+  document.getElementById('sumPrice').textContent = formatPrice(state.servicePrice);
+}
+
+function formatPrice(p) {
+  return (p % 1 === 0 ? p.toFixed(0) : p.toFixed(2)) + ' ₽';
+}
+
+// ────────────────────────────────────────────
+// Submit
+// ────────────────────────────────────────────
+async function submitBooking() {
+  const lastName  = document.getElementById('cfLastName').value.trim();
+  const firstName = document.getElementById('cfFirstName').value.trim();
+  const phone     = document.getElementById('cfPhone').value.trim();
+  const notes     = document.getElementById('cfNotes').value.trim();
+
+  if (!lastName || !firstName) { showErr('Введите имя и фамилию'); return; }
+  if (!phone) { showErr('Введите номер телефона'); return; }
+
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'flex';
+
+  try {
+    const res = await fetch('/book/api/submit/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        master_id:  state.masterId,
+        service_id: state.serviceId,
+        date:       state.date,
+        time:       state.time,
+        first_name: firstName,
+        last_name:  lastName,
+        phone:      phone,
+        notes:      notes,
+      })
+    });
+    const data = await res.json();
+    overlay.style.display = 'none';
+
+    if (!res.ok || !data.success) {
+      showErr(data.error || 'Ошибка при создании записи');
+      return;
+    }
+    showSuccess(data);
+  } catch(e) {
+    overlay.style.display = 'none';
+    showErr('Ошибка соединения. Попробуйте ещё раз.');
+  }
+}
+
+function showSuccess(data) {
+  // Hide wizard
+  document.getElementById('progressWrap').style.display = 'none';
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.book-container').style.display = 'none';
+
+  document.getElementById('succMaster').textContent  = data.master;
+  document.getElementById('succService').textContent = data.service;
+  document.getElementById('succDate').textContent    = data.date;
+  document.getElementById('succTime').textContent    = data.time;
+  document.getElementById('succPrice').textContent   = formatPrice(data.price);
+
+  const sc = document.getElementById('successScreen');
+  sc.style.display = 'block';
+  sc.style.animation = 'fadeUp .3s ease';
+}
+
+function resetBooking() {
+  // Reset state
+  Object.assign(state, {
+    masterId: null, masterName: null,
+    serviceId: null, serviceName: null, servicePrice: null, serviceDuration: null,
+    date: null, time: null, calYear: null, calMonth: null,
+  });
+  document.getElementById('progressWrap').style.display = '';
+  document.querySelector('.book-container').style.display = '';
+  document.getElementById('successScreen').style.display = 'none';
+
+  // Reset form
+  ['cfLastName','cfFirstName','cfPhone','cfNotes'].forEach(id =>
+    document.getElementById(id).value = '');
+
+  currentStep = 1;
+  document.getElementById('step1').classList.add('active');
+  updateProgress();
+  loadMasters();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ────────────────────────────────────────────
+// Wire up step transitions that need data loading
+// ────────────────────────────────────────────
+const _origGoStep = goStep;
+window.goStep = function(n) {
+  if (n === 2) loadServices();
+  _origGoStep(n);
+};
+
+// ────────────────────────────────────────────
+// Init
+// ────────────────────────────────────────────
+loadMasters();
+</script>
+</body>
+</html>

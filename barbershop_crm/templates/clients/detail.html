@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}{{ client.full_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    {% if client.photo %}<img src="{{ client.photo.url }}" class="avatar avatar-lg">
+    {% else %}<div class="avatar-initials avatar-lg">{{ client.initials }}</div>{% endif %}
+    <div>
+      <h1 class="page-title mb-1">{{ client.full_name }}</h1>
+      <div class="d-flex align-items-center gap-2">
+        <span class="tier-badge tier-{{ client.loyalty_tier }}">{{ client.get_loyalty_tier_display }}</span>
+        <span style="color:var(--crm-text-muted);font-size:.85rem">{{ client.phone }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'appointments:create' %}?client={{ client.pk }}" class="btn btn-gold">
+      <i class="bi bi-plus-lg me-1"></i>Запись
+    </a>
+    <a href="{% url 'clients:edit' client.pk %}" class="btn btn-ghost">
+      <i class="bi bi-pencil me-1"></i>Изменить
+    </a>
+  </div>
+</div>
+<!-- Stats row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="stat-mini"><div class="stat-val">{{ client.visit_count }}</div><div class="stat-lbl">Визиты</div></div></div>
+  <div class="col-6 col-md-3"><div class="stat-mini"><div class="stat-val">{{ client.total_spent|currency }}</div><div class="stat-lbl">Потрачено</div></div></div>
+  <div class="col-6 col-md-3"><div class="stat-mini"><div class="stat-val">{{ client.loyalty_points }}</div><div class="stat-lbl">Баллы</div></div></div>
+  <div class="col-6 col-md-3"><div class="stat-mini"><div class="stat-val">{% if client.last_visit %}{{ client.last_visit|date:'d.m' }}{% else %}—{% endif %}</div><div class="stat-lbl">Последний визит</div></div></div>
+</div>
+<div class="row g-3">
+  <!-- Info card -->
+  <div class="col-md-4">
+    <div class="crm-card p-4">
+      <h6 class="card-title-gold mb-3"><i class="bi bi-person me-2"></i>Информация</h6>
+      {% if client.email %}<div class="mb-2"><span style="color:var(--crm-text-muted);font-size:.75rem">EMAIL</span><br>{{ client.email }}</div>{% endif %}
+      {% if client.birth_date %}<div class="mb-2"><span style="color:var(--crm-text-muted);font-size:.75rem">ДР</span><br>{{ client.birth_date|date:'d.m.Y' }}</div>{% endif %}
+      {% if client.preferred_master %}<div class="mb-2"><span style="color:var(--crm-text-muted);font-size:.75rem">МАСТЕР</span><br>{{ client.preferred_master.display_name }}</div>{% endif %}
+      {% if client.notes %}<div class="mb-2"><span style="color:var(--crm-text-muted);font-size:.75rem">ЗАМЕТКИ</span><br><small>{{ client.notes }}</small></div>{% endif %}
+      <div style="font-size:.7rem;color:var(--crm-text-dim);margin-top:1rem">Клиент с {{ client.created_at|date:'d.m.Y' }}</div>
+    </div>
+  </div>
+  <!-- Appointments -->
+  <div class="col-md-8">
+    <div class="crm-card">
+      <div class="card-header"><h6 class="card-title-gold mb-0"><i class="bi bi-clock-history me-2"></i>История визитов</h6></div>
+      <div class="p-3">
+        {% for appt in appointments %}
+        <a href="{% url 'appointments:detail' appt.pk %}" style="text-decoration:none">
+          <div class="appt-row">
+            <span class="appt-time">{{ appt.start_time|date:'d.m' }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--crm-text-muted)">{{ appt.start_time|date:'H:i' }}</span>
+            <div class="flex-grow-1">
+              <div style="font-weight:600;font-size:.875rem">{{ appt.service.name }}</div>
+              <div style="font-size:.75rem;color:var(--crm-text-muted)">{{ appt.master.display_name }}</div>
+            </div>
+            <span class="badge-status status-{{ appt.status }}">{{ appt.get_status_display }}</span>
+            {% if appt.price_paid %}<span style="font-family:'JetBrains Mono',monospace;color:var(--crm-gold);font-size:.85rem">{{ appt.price_paid|currency }}</span>{% endif %}
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-4" style="color:var(--crm-text-muted)">Визитов пока нет</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

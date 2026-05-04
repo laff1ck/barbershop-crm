@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Записи{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Запи<span>си</span></h1>
+  <a href="{% url 'appointments:create' %}" class="btn btn-gold"><i class="bi bi-plus-lg me-1"></i>Новая запись</a>
+</div>
+<!-- Filters -->
+<div class="crm-card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap">
+    <select name="status" class="form-select" style="max-width:180px">
+      <option value="">Все статусы</option>
+      {% for val,lbl in statuses %}<option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+    </select>
+    <select name="master" class="form-select" style="max-width:180px">
+      <option value="">Все мастера</option>
+      {% for m in masters %}<option value="{{ m.pk }}" {% if master_filter == m.pk|stringformat:'s' %}selected{% endif %}>{{ m.display_name }}</option>{% endfor %}
+    </select>
+    <input type="date" name="date" value="{{ date_filter }}" class="form-control" style="max-width:170px">
+    <button type="submit" class="btn btn-gold"><i class="bi bi-funnel"></i></button>
+    {% if status_filter or master_filter or date_filter %}<a href="{% url 'appointments:list' %}" class="btn btn-ghost">Сбросить</a>{% endif %}
+  </form>
+</div>
+<div class="crm-card">
+  <div class="table-responsive">
+    <table class="crm-table">
+      <thead><tr><th>Время</th><th>Клиент</th><th>Мастер</th><th>Услуга</th><th>Стоимость</th><th>Статус</th><th></th></tr></thead>
+      <tbody>
+        {% for appt in appointments %}
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace;white-space:nowrap">
+            {{ appt.start_time|date:'d.m.Y' }}<br>
+            <span style="color:var(--crm-gold)">{{ appt.start_time|date:'H:i' }}</span>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="avatar-initials">{{ appt.client.initials }}</div>
+              <div>
+                <div style="font-weight:600">{{ appt.client.full_name }}</div>
+                <div style="font-size:.75rem;color:var(--crm-text-muted)">{{ appt.client.phone }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ appt.master.display_name }}</td>
+          <td>
+            <div>{{ appt.service.name }}</div>
+            <div style="font-size:.75rem;color:var(--crm-text-muted)">{{ appt.service.duration_display }}</div>
+          </td>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--crm-gold)">{{ appt.service.price|currency }}</td>
+          <td>
+            <span class="badge-status status-{{ appt.status }}" data-status-badge="{{ appt.pk }}">
+              {{ appt.get_status_display }}
+            </span>
+          </td>
+          <td><a href="{% url 'appointments:detail' appt.pk %}" class="btn btn-ghost btn-sm"><i class="bi bi-eye"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center py-4" style="color:var(--crm-text-muted)">Записей не найдено</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}
+{% load static %}{% block extra_scripts %}<script src="{% static 'js/appointments.js' %}"></script>{% endblock %}

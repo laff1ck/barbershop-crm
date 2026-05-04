@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<title>Примеры кода — Barbershop CRM</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; font-family: 'Segoe UI', Arial, sans-serif; padding: 36px 24px; color: #e6edf3; }
+
+h1.page-title {
+  color: #D4A017; text-align: center; font-size: 20px; margin-bottom: 8px;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.page-sub { text-align: center; color: #8b949e; font-size: 13px; margin-bottom: 40px; }
+
+/* nav pills */
+.nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 36px; }
+.nav a {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  padding: 6px 16px; border-radius: 20px; font-size: 12px; text-decoration: none;
+  transition: all .2s;
+}
+.nav a:hover, .nav a.active { background: #D4A017; color: #0d1117; border-color: #D4A017; font-weight: 700; }
+
+/* section */
+.section { margin-bottom: 52px; }
+.section-title {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.section-title .num {
+  background: #D4A017; color: #0d1117; font-size: 11px; font-weight: 800;
+  width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.section-title h2 { font-size: 17px; color: #e6edf3; }
+.section-title .badge {
+  background: #1f2937; border: 1px solid #374151; color: #9ca3af;
+  font-size: 11px; padding: 3px 10px; border-radius: 12px;
+}
+
+/* code card */
+.code-card {
+  background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+  overflow: hidden; margin-bottom: 16px;
+}
+.code-header {
+  background: #1c2128; padding: 10px 18px; display: flex; align-items: center;
+  gap: 10px; border-bottom: 1px solid #30363d;
+}
+.code-header .dots { display: flex; gap: 6px; }
+.code-header .dots span { width: 12px; height: 12px; border-radius: 50%; }
+.dot-r { background: #ff5f57; }
+.dot-y { background: #febc2e; }
+.dot-g { background: #28c840; }
+.code-header .filename { color: #8b949e; font-size: 12px; font-family: 'Consolas', monospace; flex: 1; }
+.code-header .tag-file { color: #58a6ff; font-size: 11px; background: #0d2b45; padding: 2px 8px; border-radius: 8px; }
+
+.code-note {
+  background: #0d2b45; border-left: 3px solid #58a6ff;
+  padding: 10px 16px; font-size: 12px; color: #a5c8f0; line-height: 1.6;
+  margin: 0 16px 14px;
+}
+.code-note strong { color: #79c0ff; }
+
+pre {
+  padding: 18px 22px; overflow-x: auto; font-size: 12.5px; line-height: 1.7;
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+/* syntax colors */
+.kw  { color: #ff7b72; }        /* keyword: def, class, return, if */
+.kw2 { color: #79c0ff; }        /* keyword2: import, from, self */
+.fn  { color: #d2a8ff; }        /* function name */
+.cl  { color: #ffa657; }        /* class name */
+.st  { color: #a5d6ff; }        /* string */
+.st2 { color: #79c0ff; }        /* fstring var */
+.cm  { color: #8b949e; font-style: italic; }  /* comment */
+.nu  { color: #79c0ff; }        /* number */
+.dc  { color: #3fb950; }        /* decorator */
+.co  { color: #e6edf3; }        /* plain code */
+.op  { color: #79c0ff; }        /* operator = : , */
+
+/* two-col layout */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* result box */
+.result-box {
+  background: #0d1f0d; border: 1px solid #1a6b2f; border-radius: 8px;
+  padding: 14px 18px; font-family: 'Consolas', monospace; font-size: 12px;
+  color: #3fb950; line-height: 1.8;
+}
+.result-box .rl { color: #8b949e; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Примеры кода — Barbershop CRM</h1>
+<p class="page-sub">Django 5 · PostgreSQL · Специфичные задаче примеры</p>
+
+<div class="nav">
+  <a href="#models" class="active">Модели</a>
+  <a href="#appointment">Создание записи</a>
+  <a href="#payment">Оплата + скидка</a>
+  <a href="#loyalty">Лояльность</a>
+  <a href="#schedule">Расписание</a>
+  <a href="#booking">Онлайн-запись</a>
+  <a href="#report">Отчётность</a>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     1. МОДЕЛИ
+══════════════════════════════════════════════ -->
+<div class="section" id="models">
+  <div class="section-title">
+    <div class="num">1</div>
+    <h2>Модели данных</h2>
+    <div class="badge">apps/appointments/models.py · apps/clients/models.py</div>
+  </div>
+
+  <div class="two-col">
+    <div class="code-card">
+      <div class="code-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="filename">apps/appointments/models.py</span>
+        <span class="tag-file">Appointment</span>
+      </div>
+      <pre><span class="kw">class</span> <span class="cl">Appointment</span>(<span class="cl">models</span>.Model):
+    <span class="cl">STATUS_CHOICES</span> = [
+        (<span class="st">'planned'</span>,   <span class="st">'Запланирована'</span>),
+        (<span class="st">'completed'</span>, <span class="st">'Завершена'</span>),
+        (<span class="st">'cancelled'</span>, <span class="st">'Отменена'</span>),
+    ]
+
+    client  = <span class="cl">models</span>.<span class="fn">ForeignKey</span>(
+        <span class="st">'clients.Client'</span>, on_delete=<span class="cl">models</span>.PROTECT
+    )
+    master  = <span class="cl">models</span>.<span class="fn">ForeignKey</span>(
+        <span class="st">'staff.Master'</span>, on_delete=<span class="cl">models</span>.PROTECT
+    )
+    service = <span class="cl">models</span>.<span class="fn">ForeignKey</span>(
+        <span class="st">'services.Service'</span>, on_delete=<span class="cl">models</span>.PROTECT
+    )
+    scheduled_at = <span class="cl">models</span>.<span class="fn">DateTimeField</span>()
+    status = <span class="cl">models</span>.<span class="fn">CharField</span>(
+        max_length=<span class="nu">20</span>,
+        choices=<span class="cl">STATUS_CHOICES</span>,
+        default=<span class="st">'planned'</span>
+    )
+    notes = <span class="cl">models</span>.<span class="fn">TextField</span>(blank=<span class="kw">True</span>)
+
+    <span class="kw">class</span> <span class="cl">Meta</span>:
+        ordering = [<span class="st">'-scheduled_at'</span>]
+
+    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="kw2">self</span>):
+        <span class="kw">return</span> (<span class="st">f"</span><span class="st2">{self.client}</span><span class="st"> → </span><span class="st2">{self.master}</span>"</span>
+                <span class="st">f" </span><span class="st2">{self.scheduled_at:%d.%m %H:%M}</span><span class="st">"</span>)</pre>
+    </div>
+
+    <div class="code-card">
+      <div class="code-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="filename">apps/clients/models.py</span>
+        <span class="tag-file">Client + Loyalty</span>
+      </div>
+      <pre><span class="kw">class</span> <span class="cl">Client</span>(<span class="cl">models</span>.Model):
+    <span class="cm"># Уровни программы лояльности</span>
+    <span class="cl">LOYALTY_LEVELS</span> = [
+        (<span class="st">'bronze'</span>, <span class="st">'Бронза'</span>,  <span class="nu">0</span>,   <span class="nu">0</span>),
+        (<span class="st">'silver'</span>, <span class="st">'Серебро'</span>, <span class="nu">5</span>,   <span class="nu">5</span>),
+        (<span class="st">'gold'</span>,   <span class="st">'Золото'</span>,  <span class="nu">10</span>,  <span class="nu">10</span>),
+        (<span class="st">'vip'</span>,    <span class="st">'VIP'</span>,     <span class="nu">20</span>,  <span class="nu">15</span>),
+    ]
+
+    name        = <span class="cl">models</span>.<span class="fn">CharField</span>(max_length=<span class="nu">100</span>)
+    phone       = <span class="cl">models</span>.<span class="fn">CharField</span>(max_length=<span class="nu">20</span>, unique=<span class="kw">True</span>)
+    email       = <span class="cl">models</span>.<span class="fn">EmailField</span>(blank=<span class="kw">True</span>)
+    visit_count = <span class="cl">models</span>.<span class="fn">PositiveIntegerField</span>(default=<span class="nu">0</span>)
+    loyalty_level = <span class="cl">models</span>.<span class="fn">CharField</span>(
+        max_length=<span class="nu">10</span>, default=<span class="st">'bronze'</span>
+    )
+    discount_pct = <span class="cl">models</span>.<span class="fn">PositiveSmallIntegerField</span>(
+        default=<span class="nu">0</span>
+    )
+
+    <span class="kw">def</span> <span class="fn">recalculate_loyalty</span>(<span class="kw2">self</span>):
+        <span class="cm"># вызывается после каждой оплаты</span>
+        v = <span class="kw2">self</span>.visit_count
+        <span class="kw">if</span>   v &gt;= <span class="nu">20</span>: lvl, disc = <span class="st">'vip'</span>,    <span class="nu">15</span>
+        <span class="kw">elif</span> v &gt;= <span class="nu">10</span>: lvl, disc = <span class="st">'gold'</span>,   <span class="nu">10</span>
+        <span class="kw">elif</span> v &gt;= <span class="nu">5</span>:  lvl, disc = <span class="st">'silver'</span>, <span class="nu">5</span>
+        <span class="kw">else</span>:          lvl, disc = <span class="st">'bronze'</span>, <span class="nu">0</span>
+        <span class="kw2">self</span>.loyalty_level = lvl
+        <span class="kw2">self</span>.discount_pct  = disc
+        <span class="kw2">self</span>.<span class="fn">save</span>(
+            update_fields=[<span class="st">'loyalty_level'</span>, <span class="st">'discount_pct'</span>]
+        )</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     2. СОЗДАНИЕ ЗАПИСИ
+══════════════════════════════════════════════ -->
+<div class="section" id="appointment">
+  <div class="section-title">
+    <div class="num">2</div>
+    <h2>Создание записи администратором</h2>
+    <div class="badge">apps/appointments/views.py</div>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <span class="filename">apps/appointments/views.py</span>
+      <span class="tag-file">AppointmentCreateView</span>
+    </div>
+    <div class="code-note">
+      <strong>Что делает:</strong> только администратор может создавать записи.
+      После сохранения проверяется пересечение по времени мастера (конфликт слота).
+    </div>
+    <pre><span class="kw">from</span> <span class="kw2">django</span>.contrib.auth.mixins <span class="kw">import</span> LoginRequiredMixin
+<span class="kw">from</span> <span class="kw2">django</span>.views.generic <span class="kw">import</span> CreateView
+<span class="kw">from</span> <span class="kw2">django</span>.urls <span class="kw">import</span> reverse_lazy
+<span class="kw">from</span> .models <span class="kw">import</span> Appointment
+<span class="kw">from</span> .forms  <span class="kw">import</span> AppointmentForm
+<span class="kw">from</span> apps.accounts.mixins <span class="kw">import</span> AdminRequiredMixin
+
+<span class="kw">class</span> <span class="cl">AppointmentCreateView</span>(<span class="cl">AdminRequiredMixin</span>, <span class="cl">LoginRequiredMixin</span>, <span class="cl">CreateView</span>):
+    model         = <span class="cl">Appointment</span>
+    form_class    = <span class="cl">AppointmentForm</span>
+    template_name = <span class="st">'appointments/appointment_form.html'</span>
+    success_url   = <span class="fn">reverse_lazy</span>(<span class="st">'appointments:list'</span>)
+
+    <span class="kw">def</span> <span class="fn">form_valid</span>(<span class="kw2">self</span>, form):
+        appointment = form.<span class="fn">save</span>(commit=<span class="kw">False</span>)
+        <span class="cm"># проверка конфликта слота мастера</span>
+        duration = appointment.service.duration_minutes
+        end_time = appointment.scheduled_at + timedelta(minutes=duration)
+
+        conflict = <span class="cl">Appointment</span>.objects.<span class="fn">filter</span>(
+            master       = appointment.master,
+            status       = <span class="st">'planned'</span>,
+            scheduled_at__lt = end_time,
+            scheduled_at__gt = appointment.scheduled_at - timedelta(minutes=duration),
+        ).<span class="fn">exclude</span>(pk=appointment.pk)
+
+        <span class="kw">if</span> conflict.<span class="fn">exists</span>():
+            form.<span class="fn">add_error</span>(<span class="kw">None</span>, <span class="st">'Мастер занят в это время'</span>)
+            <span class="kw">return</span> <span class="kw2">self</span>.<span class="fn">form_invalid</span>(form)
+
+        appointment.<span class="fn">save</span>()
+        <span class="kw">return</span> <span class="fn">super</span>().<span class="fn">form_valid</span>(form)</pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     3. ОПЛАТА + СКИДКА
+══════════════════════════════════════════════ -->
+<div class="section" id="payment">
+  <div class="section-title">
+    <div class="num">3</div>
+    <h2>Приём оплаты со скидкой</h2>
+    <div class="badge">apps/billing/views.py · apps/billing/models.py</div>
+  </div>
+
+  <div class="two-col">
+    <div class="code-card">
+      <div class="code-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="filename">apps/billing/models.py</span>
+        <span class="tag-file">Payment</span>
+      </div>
+      <pre><span class="kw">class</span> <span class="cl">Payment</span>(<span class="cl">models</span>.Model):
+    <span class="cl">METHOD_CHOICES</span> = [
+        (<span class="st">'cash'</span>, <span class="st">'Наличные'</span>),
+        (<span class="st">'card'</span>, <span class="st">'Карта'</span>),
+    ]
+
+    appointment  = <span class="cl">models</span>.<span class="fn">OneToOneField</span>(
+        <span class="st">'appointments.Appointment'</span>,
+        on_delete=<span class="cl">models</span>.PROTECT
+    )
+    amount_gross = <span class="cl">models</span>.<span class="fn">DecimalField</span>(
+        max_digits=<span class="nu">8</span>, decimal_places=<span class="nu">2</span>,
+        verbose_name=<span class="st">'Сумма до скидки'</span>
+    )
+    discount_pct = <span class="cl">models</span>.<span class="fn">PositiveSmallIntegerField</span>(
+        default=<span class="nu">0</span>,
+        verbose_name=<span class="st">'Скидка %'</span>
+    )
+    amount_net = <span class="cl">models</span>.<span class="fn">DecimalField</span>(
+        max_digits=<span class="nu">8</span>, decimal_places=<span class="nu">2</span>,
+        verbose_name=<span class="st">'Итоговая сумма'</span>
+    )
+    method     = <span class="cl">models</span>.<span class="fn">CharField</span>(
+        max_length=<span class="nu">10</span>, choices=<span class="cl">METHOD_CHOICES</span>
+    )
+    paid_at    = <span class="cl">models</span>.<span class="fn">DateTimeField</span>(auto_now_add=<span class="kw">True</span>)
+
+    <span class="kw">def</span> <span class="fn">save</span>(<span class="kw2">self</span>, *args, **kwargs):
+        <span class="cm"># пересчёт автоматически при сохранении</span>
+        disc = <span class="cl">Decimal</span>(<span class="kw2">self</span>.discount_pct) / <span class="cl">Decimal</span>(<span class="st">'100'</span>)
+        <span class="kw2">self</span>.amount_net = (<span class="kw2">self</span>.amount_gross
+                           * (<span class="cl">Decimal</span>(<span class="st">'1'</span>) - disc)).<span class="fn">quantize</span>(
+            <span class="cl">Decimal</span>(<span class="st">'0.01'</span>)
+        )
+        <span class="fn">super</span>().<span class="fn">save</span>(*args, **kwargs)</pre>
+    </div>
+
+    <div class="code-card">
+      <div class="code-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="filename">apps/billing/views.py</span>
+        <span class="tag-file">PaymentCreateView</span>
+      </div>
+      <pre><span class="kw">class</span> <span class="cl">PaymentCreateView</span>(<span class="cl">MasterOrAdminMixin</span>, <span class="cl">CreateView</span>):
+    model      = <span class="cl">Payment</span>
+    form_class = <span class="cl">PaymentForm</span>
+
+    <span class="kw">def</span> <span class="fn">get_initial</span>(<span class="kw2">self</span>):
+        appt = <span class="fn">get_object_or_404</span>(
+            <span class="cl">Appointment</span>, pk=<span class="kw2">self</span>.kwargs[<span class="st">'pk'</span>]
+        )
+        client = appt.client
+        <span class="kw">return</span> {
+            <span class="st">'appointment'</span>:  appt,
+            <span class="st">'amount_gross'</span>: appt.service.price,
+            <span class="st">'discount_pct'</span>: client.discount_pct,
+        }
+
+    <span class="kw">def</span> <span class="fn">form_valid</span>(<span class="kw2">self</span>, form):
+        payment = form.<span class="fn">save</span>()
+        appt    = payment.appointment
+        client  = appt.client
+
+        <span class="cm"># 1. завершить запись</span>
+        appt.status = <span class="st">'completed'</span>
+        appt.<span class="fn">save</span>(update_fields=[<span class="st">'status'</span>])
+
+        <span class="cm"># 2. прибавить визит и пересчитать лояльность</span>
+        client.visit_count += <span class="nu">1</span>
+        client.<span class="fn">save</span>(update_fields=[<span class="st">'visit_count'</span>])
+        client.<span class="fn">recalculate_loyalty</span>()
+
+        messages.<span class="fn">success</span>(
+            <span class="kw2">self</span>.request,
+            <span class="st">f'Оплата </span><span class="st2">{payment.amount_net}</span><span class="st"> ₽ принята'</span>
+        )
+        <span class="kw">return</span> <span class="fn">redirect</span>(<span class="st">'appointments:list'</span>)</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     4. ЛОЯЛЬНОСТЬ (сигнал)
+══════════════════════════════════════════════ -->
+<div class="section" id="loyalty">
+  <div class="section-title">
+    <div class="num">4</div>
+    <h2>Автоматический пересчёт лояльности (сигнал)</h2>
+    <div class="badge">apps/billing/signals.py</div>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <span class="filename">apps/billing/signals.py</span>
+      <span class="tag-file">post_save → Payment</span>
+    </div>
+    <div class="code-note">
+      <strong>Как работает:</strong> Django-сигнал <code>post_save</code> срабатывает после каждого нового платежа.
+      Автоматически обновляет счётчик визитов и уровень лояльности клиента без ручного вызова из view.
+    </div>
+    <pre><span class="kw">from</span> <span class="kw2">django</span>.db.models.signals <span class="kw">import</span> post_save
+<span class="kw">from</span> <span class="kw2">django</span>.dispatch <span class="kw">import</span> receiver
+<span class="kw">from</span> .models <span class="kw">import</span> Payment
+
+<span class="dc">@receiver</span>(post_save, sender=<span class="cl">Payment</span>)
+<span class="kw">def</span> <span class="fn">update_client_loyalty</span>(sender, instance, created, **kwargs):
+    <span class="st">"""После каждой новой оплаты пересчитываем лояльность клиента."""</span>
+    <span class="kw">if not</span> created:
+        <span class="kw">return</span>   <span class="cm"># обновление записи — не трогаем</span>
+
+    client = instance.appointment.client
+
+    <span class="cm"># атомарно увеличиваем счётчик визитов</span>
+    <span class="cl">Client</span>.objects.<span class="fn">filter</span>(pk=client.pk).<span class="fn">update</span>(
+        visit_count=<span class="cl">F</span>(<span class="st">'visit_count'</span>) + <span class="nu">1</span>
+    )
+    client.<span class="fn">refresh_from_db</span>()
+
+    <span class="cm"># пороги: bronze 0, silver 5, gold 10, vip 20</span>
+    v = client.visit_count
+    <span class="kw">if</span>   v &gt;= <span class="nu">20</span>: lvl, disc = <span class="st">'vip'</span>,    <span class="nu">15</span>
+    <span class="kw">elif</span> v &gt;= <span class="nu">10</span>: lvl, disc = <span class="st">'gold'</span>,   <span class="nu">10</span>
+    <span class="kw">elif</span> v &gt;= <span class="nu">5</span>:  lvl, disc = <span class="st">'silver'</span>, <span class="nu">5</span>
+    <span class="kw">else</span>:          lvl, disc = <span class="st">'bronze'</span>, <span class="nu">0</span>
+
+    <span class="cl">Client</span>.objects.<span class="fn">filter</span>(pk=client.pk).<span class="fn">update</span>(
+        loyalty_level=lvl,
+        discount_pct=disc
+    )</pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     5. РАСПИСАНИЕ / КАЛЕНДАРЬ
+══════════════════════════════════════════════ -->
+<div class="section" id="schedule">
+  <div class="section-title">
+    <div class="num">5</div>
+    <h2>Запрос расписания мастера (календарь)</h2>
+    <div class="badge">apps/appointments/views.py</div>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <span class="filename">apps/appointments/views.py</span>
+      <span class="tag-file">ScheduleView</span>
+    </div>
+    <div class="code-note">
+      <strong>Что делает:</strong> выдаёт все запланированные записи мастера на заданную неделю,
+      сгруппированные по дням — для отображения в недельном календаре.
+    </div>
+    <pre><span class="kw">from</span> <span class="kw2">django</span>.views.generic <span class="kw">import</span> TemplateView
+<span class="kw">from</span> <span class="kw2">django</span>.utils <span class="kw">import</span> timezone
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+<span class="kw">from</span> datetime <span class="kw">import</span> timedelta
+
+<span class="kw">class</span> <span class="cl">ScheduleView</span>(<span class="cl">LoginRequiredMixin</span>, <span class="cl">TemplateView</span>):
+    template_name = <span class="st">'appointments/schedule.html'</span>
+
+    <span class="kw">def</span> <span class="fn">get_context_data</span>(<span class="kw2">self</span>, **kwargs):
+        ctx   = <span class="fn">super</span>().<span class="fn">get_context_data</span>(**kwargs)
+        today = timezone.<span class="fn">localdate</span>()
+
+        <span class="cm"># начало недели (понедельник)</span>
+        week_start = today - timedelta(days=today.weekday())
+        week_end   = week_start + timedelta(days=<span class="nu">6</span>)
+
+        <span class="cm"># если мастер — только свои записи</span>
+        qs = <span class="cl">Appointment</span>.objects.<span class="fn">select_related</span>(
+            <span class="st">'client'</span>, <span class="st">'service'</span>, <span class="st">'master'</span>
+        ).<span class="fn">filter</span>(
+            status=<span class="st">'planned'</span>,
+            scheduled_at__date__gte=week_start,
+            scheduled_at__date__lte=week_end,
+        )
+        <span class="kw">if</span> <span class="kw2">self</span>.request.user.role == <span class="st">'master'</span>:
+            qs = qs.<span class="fn">filter</span>(master__user=<span class="kw2">self</span>.request.user)
+
+        <span class="cm"># группируем по дате</span>
+        by_day = defaultdict(<span class="fn">list</span>)
+        <span class="kw">for</span> appt <span class="kw">in</span> qs.<span class="fn">order_by</span>(<span class="st">'scheduled_at'</span>):
+            by_day[appt.scheduled_at.date()].<span class="fn">append</span>(appt)
+
+        ctx[<span class="st">'week_days'</span>]  = [week_start + timedelta(days=i) <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="nu">7</span>)]
+        ctx[<span class="st">'by_day'</span>]    = by_day
+        ctx[<span class="st">'week_start'</span>] = week_start
+        <span class="kw">return</span> ctx</pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     6. ОНЛАЙН-ЗАПИСЬ (публичная)
+══════════════════════════════════════════════ -->
+<div class="section" id="booking">
+  <div class="section-title">
+    <div class="num">6</div>
+    <h2>Публичная онлайн-запись клиента</h2>
+    <div class="badge">apps/booking/views.py</div>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <span class="filename">apps/booking/views.py</span>
+      <span class="tag-file">BookingView (публичная, без авторизации)</span>
+    </div>
+    <div class="code-note">
+      <strong>Особенность:</strong> клиент не авторизован. При записи автоматически ищется
+      или создаётся объект <code>Client</code> по номеру телефона (get_or_create).
+    </div>
+    <pre><span class="kw">from</span> <span class="kw2">django</span>.views <span class="kw">import</span> View
+<span class="kw">from</span> <span class="kw2">django</span>.shortcuts <span class="kw">import</span> render, redirect
+<span class="kw">from</span> apps.clients.models      <span class="kw">import</span> Client
+<span class="kw">from</span> apps.appointments.models <span class="kw">import</span> Appointment
+
+<span class="kw">class</span> <span class="cl">BookingView</span>(<span class="cl">View</span>):
+    <span class="st">"""Доступна без авторизации — для клиентов барбершопа."""</span>
+
+    <span class="kw">def</span> <span class="fn">get</span>(<span class="kw2">self</span>, request):
+        <span class="kw">return</span> <span class="fn">render</span>(request, <span class="st">'booking/booking_form.html'</span>, {
+            <span class="st">'services'</span>: <span class="cl">Service</span>.objects.<span class="fn">filter</span>(is_active=<span class="kw">True</span>),
+            <span class="st">'masters'</span>:  <span class="cl">Master</span>.objects.<span class="fn">filter</span>(is_active=<span class="kw">True</span>),
+        })
+
+    <span class="kw">def</span> <span class="fn">post</span>(<span class="kw2">self</span>, request):
+        data = request.POST
+
+        <span class="cm"># найти или создать клиента по телефону</span>
+        client, created = <span class="cl">Client</span>.objects.<span class="fn">get_or_create</span>(
+            phone=data[<span class="st">'phone'</span>],
+            defaults={<span class="st">'name'</span>: data[<span class="st">'name'</span>]}
+        )
+
+        appt = <span class="cl">Appointment</span>.objects.<span class="fn">create</span>(
+            client       = client,
+            master       = <span class="fn">get_object_or_404</span>(<span class="cl">Master</span>, pk=data[<span class="st">'master'</span>]),
+            service      = <span class="fn">get_object_or_404</span>(<span class="cl">Service</span>, pk=data[<span class="st">'service'</span>]),
+            scheduled_at = <span class="fn">parse_datetime</span>(data[<span class="st">'slot'</span>]),
+            status       = <span class="st">'planned'</span>,
+        )
+
+        <span class="kw">return</span> <span class="fn">redirect</span>(<span class="st">'booking:confirm'</span>, pk=appt.pk)</pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     7. ОТЧЁТНОСТЬ
+══════════════════════════════════════════════ -->
+<div class="section" id="report">
+  <div class="section-title">
+    <div class="num">7</div>
+    <h2>Фильтрованная финансовая отчётность</h2>
+    <div class="badge">apps/billing/views.py</div>
+  </div>
+
+  <div class="code-card">
+    <div class="code-header">
+      <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+      <span class="filename">apps/billing/views.py</span>
+      <span class="tag-file">ReportView — агрегация Django ORM</span>
+    </div>
+    <div class="code-note">
+      <strong>Что делает:</strong> принимает GET-параметры <code>date_from</code>, <code>date_to</code>, <code>master_id</code>.
+      Возвращает суммарную выручку, количество визитов и разбивку по мастерам через <code>annotate + aggregate</code>.
+    </div>
+    <pre><span class="kw">from</span> <span class="kw2">django</span>.db.models <span class="kw">import</span> Sum, Count, Avg
+<span class="kw">from</span> <span class="kw2">django</span>.db.models.functions <span class="kw">import</span> TruncDate
+
+<span class="kw">class</span> <span class="cl">ReportView</span>(<span class="cl">AdminRequiredMixin</span>, <span class="cl">TemplateView</span>):
+    template_name = <span class="st">'billing/report.html'</span>
+
+    <span class="kw">def</span> <span class="fn">get_context_data</span>(<span class="kw2">self</span>, **kwargs):
+        ctx = <span class="fn">super</span>().<span class="fn">get_context_data</span>(**kwargs)
+        p   = <span class="kw2">self</span>.request.GET
+
+        qs = <span class="cl">Payment</span>.objects.<span class="fn">select_related</span>(
+            <span class="st">'appointment__master'</span>,
+            <span class="st">'appointment__client'</span>,
+            <span class="st">'appointment__service'</span>,
+        )
+
+        <span class="cm"># ── фильтрация ──────────────────────────────</span>
+        <span class="kw">if</span> p.<span class="fn">get</span>(<span class="st">'date_from'</span>):
+            qs = qs.<span class="fn">filter</span>(paid_at__date__gte=p[<span class="st">'date_from'</span>])
+        <span class="kw">if</span> p.<span class="fn">get</span>(<span class="st">'date_to'</span>):
+            qs = qs.<span class="fn">filter</span>(paid_at__date__lte=p[<span class="st">'date_to'</span>])
+        <span class="kw">if</span> p.<span class="fn">get</span>(<span class="st">'master'</span>):
+            qs = qs.<span class="fn">filter</span>(appointment__master_id=p[<span class="st">'master'</span>])
+
+        <span class="cm"># ── агрегация ───────────────────────────────</span>
+        totals = qs.<span class="fn">aggregate</span>(
+            total_revenue = <span class="cl">Sum</span>(<span class="st">'amount_net'</span>),
+            total_visits  = <span class="cl">Count</span>(<span class="st">'id'</span>),
+            avg_bill      = <span class="cl">Avg</span>(<span class="st">'amount_net'</span>),
+        )
+
+        <span class="cm"># ── разбивка по мастерам ────────────────────</span>
+        by_master = (
+            qs
+            .<span class="fn">values</span>(<span class="st">'appointment__master__user__get_full_name'</span>)
+            .<span class="fn">annotate</span>(
+                revenue = <span class="cl">Sum</span>(<span class="st">'amount_net'</span>),
+                visits  = <span class="cl">Count</span>(<span class="st">'id'</span>),
+            )
+            .<span class="fn">order_by</span>(<span class="st">'-revenue'</span>)
+        )
+
+        ctx.<span class="fn">update</span>({<span class="st">'totals'</span>: totals, <span class="st">'by_master'</span>: by_master, <span class="st">'payments'</span>: qs})
+        <span class="kw">return</span> ctx</pre>
+  </div>
+</div>
+
+</body>
+</html>

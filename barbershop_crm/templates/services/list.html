@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Услуги{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Услу<span>ги</span></h1>
+  <a href="{% url 'services:create' %}" class="btn btn-gold"><i class="bi bi-plus-lg me-1"></i>Добавить услугу</a>
+</div>
+{% for category in categories %}
+<div class="crm-card mb-3">
+  <div class="card-header d-flex align-items-center gap-2">
+    {% if category.icon %}<i class="{{ category.icon }}" style="color:var(--crm-gold)"></i>{% endif %}
+    <h6 class="card-title-gold mb-0">{{ category.name }}</h6>
+    <span style="font-size:.75rem;color:var(--crm-text-muted);margin-left:auto">{{ category.services.count }} услуг</span>
+  </div>
+  <div class="p-3">
+    {% for svc in category.services.all %}
+    <div class="service-item">
+      <div class="flex-grow-1">
+        <div style="font-weight:600">{{ svc.name }}</div>
+        {% if svc.description %}<div style="font-size:.78rem;color:var(--crm-text-muted)">{{ svc.description }}</div>{% endif %}
+      </div>
+      <span style="font-size:.8rem;color:var(--crm-text-muted);margin-right:1.5rem">
+        <i class="bi bi-clock me-1"></i>{{ svc.duration_display }}
+      </span>
+      <span class="service-price me-3">{{ svc.price|currency }}</span>
+      {% if not svc.is_active %}<span class="badge-status status-cancelled me-2">Неактивна</span>{% endif %}
+      <a href="{% url 'services:edit' svc.pk %}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-pencil"></i>
+      </a>
+    </div>
+    {% empty %}
+    <div style="color:var(--crm-text-muted);padding:.5rem;font-size:.85rem">Нет услуг в категории</div>
+    {% endfor %}
+  </div>
+</div>
+{% empty %}
+<div class="crm-card p-5 text-center" style="color:var(--crm-text-muted)">Категорий нет</div>
+{% endfor %}
+{% endblock %}

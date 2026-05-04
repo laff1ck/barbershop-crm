@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}{{ master.display_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3">
+    {% if master.photo %}<img src="{{ master.photo.url }}" class="avatar avatar-lg">
+    {% else %}<div class="avatar-initials avatar-lg" style="border-color:{{ master.color }}">{{ master.display_name|slice:':2'|upper }}</div>{% endif %}
+    <div>
+      <h1 class="page-title mb-1">{{ master.display_name }}</h1>
+      <div>{{ master.rating|stars }}</div>
+    </div>
+  </div>
+  <a href="{% url 'staff:edit' master.pk %}" class="btn btn-ghost"><i class="bi bi-pencil me-1"></i>Изменить</a>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-4"><div class="stat-mini"><div class="stat-val">{{ total_appointments }}</div><div class="stat-lbl">Записи</div></div></div>
+  <div class="col-4"><div class="stat-mini"><div class="stat-val">{{ total_revenue|currency }}</div><div class="stat-lbl">Выручка</div></div></div>
+  <div class="col-4"><div class="stat-mini"><div class="stat-val">{{ master.rating }}</div><div class="stat-lbl">Рейтинг</div></div></div>
+</div>
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="crm-card p-4">
+      <h6 class="card-title-gold mb-3"><i class="bi bi-person-badge me-2"></i>Профиль</h6>
+      {% if master.phone %}<div class="mb-2"><span style="color:var(--crm-text-muted);font-size:.75rem">ТЕЛЕФОН</span><br>{{ master.phone }}</div>{% endif %}
+      {% if master.bio %}<div class="mb-2"><span style="color:var(--crm-text-muted);font-size:.75rem">О МАСТЕРЕ</span><br><small>{{ master.bio }}</small></div>{% endif %}
+      <div class="mb-2">
+        <span style="color:var(--crm-text-muted);font-size:.75rem">УСЛУГИ</span><br>
+        <div class="d-flex flex-wrap gap-1 mt-1">
+          {% for svc in master.services.all %}<span style="background:var(--crm-gold-muted);color:var(--crm-gold);font-size:.7rem;padding:2px 8px;border-radius:20px">{{ svc.name }}</span>{% endfor %}
+        </div>
+      </div>
+      <div class="mt-2" style="width:16px;height:16px;border-radius:50%;background:{{ master.color }};border:1px solid rgba(255,255,255,.2);display:inline-block"></div>
+      <span style="font-size:.75rem;color:var(--crm-text-muted);margin-left:.5rem">Цвет в календаре</span>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="crm-card">
+      <div class="card-header"><h6 class="card-title-gold mb-0"><i class="bi bi-calendar-day me-2"></i>Записи сегодня</h6></div>
+      <div class="p-3">
+        {% for appt in today_appointments %}
+        <a href="{% url 'appointments:detail' appt.pk %}" style="text-decoration:none">
+          <div class="appt-row">
+            <span class="appt-time">{{ appt.start_time|date:'H:i' }}</span>
+            <div class="avatar-initials">{{ appt.client.initials }}</div>
+            <div class="flex-grow-1">
+              <div style="font-weight:600;font-size:.875rem">{{ appt.client.full_name }}</div>
+              <div style="font-size:.75rem;color:var(--crm-text-muted)">{{ appt.service.name }}</div>
+            </div>
+            <span class="badge-status status-{{ appt.status }}">{{ appt.get_status_display }}</span>
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-4" style="color:var(--crm-text-muted)">Нет записей на сегодня</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

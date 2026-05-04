@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Чек {{ payment.receipt_number }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Чек <span>#{{ payment.receipt_number }}</span></h1>
+  <button onclick="window.print()" class="btn btn-ghost"><i class="bi bi-printer me-1"></i>Печать</button>
+</div>
+<div class="receipt" id="receipt">
+  <div class="text-center mb-4">
+    <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--crm-gold);font-weight:700">THE CUT</div>
+    <div style="font-size:.7rem;color:var(--crm-text-muted);text-transform:uppercase;letter-spacing:.15em">Barbershop</div>
+  </div>
+  <hr class="receipt-divider">
+  <div class="d-flex justify-content-between mb-2">
+    <span style="color:var(--crm-text-muted);font-size:.8rem">Чек</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:.85rem">{{ payment.receipt_number }}</span>
+  </div>
+  <div class="d-flex justify-content-between mb-2">
+    <span style="color:var(--crm-text-muted);font-size:.8rem">Дата</span>
+    <span style="font-size:.85rem">{{ payment.paid_at|date:'d.m.Y H:i' }}</span>
+  </div>
+  <div class="d-flex justify-content-between mb-2">
+    <span style="color:var(--crm-text-muted);font-size:.8rem">Клиент</span>
+    <span style="font-size:.85rem">{{ payment.appointment.client.full_name }}</span>
+  </div>
+  <div class="d-flex justify-content-between mb-2">
+    <span style="color:var(--crm-text-muted);font-size:.8rem">Мастер</span>
+    <span style="font-size:.85rem">{{ payment.appointment.master.display_name }}</span>
+  </div>
+  <hr class="receipt-divider">
+  <div class="d-flex justify-content-between mb-2">
+    <span>{{ payment.appointment.service.name }}</span>
+    <span style="font-family:'JetBrains Mono',monospace">{{ payment.amount|currency }}</span>
+  </div>
+  {% if payment.discount %}
+  <div class="d-flex justify-content-between mb-2">
+    <span style="color:#20c997">Скидка {{ payment.discount }}%</span>
+    <span style="font-family:'JetBrains Mono',monospace;color:#20c997">-{{ payment.discount_amount|currency }}</span>
+  </div>
+  {% endif %}
+  <hr class="receipt-divider">
+  <div class="d-flex justify-content-between">
+    <strong style="font-size:1.1rem">Итого</strong>
+    <strong style="font-family:'JetBrains Mono',monospace;font-size:1.3rem;color:var(--crm-gold)">{{ payment.final_amount|currency }}</strong>
+  </div>
+  <div class="mt-2" style="font-size:.8rem;color:var(--crm-text-muted)">
+    Оплата: {{ payment.get_method_display }}
+  </div>
+  <hr class="receipt-divider">
+  <div class="text-center" style="font-size:.75rem;color:var(--crm-text-dim)">Спасибо за визит!</div>
+</div>
+{% endblock %}

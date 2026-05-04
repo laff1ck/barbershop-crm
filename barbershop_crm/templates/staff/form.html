@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Изменить мастера{% else %}Новый мастер{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header mb-4">
+  <h1 class="page-title">{% if object %}Изменить <span>мастера</span>{% else %}Новый <span>мастер</span>{% endif %}</h1>
+  <a href="{% url 'staff:list' %}" class="btn btn-ghost"><i class="bi bi-arrow-left me-1"></i>Назад</a>
+</div>
+
+<div class="row justify-content-center">
+<div class="col-lg-7 col-md-9">
+<div class="crm-card p-0 overflow-hidden">
+
+  <!-- Header -->
+  <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--crm-gold-border);background:rgba(201,168,76,.04);display:flex;align-items:center;gap:.75rem">
+    <div style="width:36px;height:36px;border-radius:10px;background:var(--crm-gold-muted);border:1px solid var(--crm-gold-border);display:flex;align-items:center;justify-content:center;color:var(--crm-gold)">
+      <i class="bi bi-person-badge"></i>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--crm-text-primary)">{% if object %}{{ object.display_name }}{% else %}Новый мастер{% endif %}</div>
+      <div style="font-size:.72rem;color:var(--crm-text-muted)">{% if object %}Редактирование профиля{% else %}Добавление в команду{% endif %}</div>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="p-4">
+    {% csrf_token %}
+
+    <!-- Section: Основное -->
+    <div class="form-section-label"><i class="bi bi-person me-2"></i>Основная информация</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="crm-field-label">Имя для отображения <span class="text-gold">*</span></label>
+        {{ form.display_name }}
+        {% if form.display_name.errors %}<div class="field-error">{{ form.display_name.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="crm-field-label">Телефон</label>
+        {{ form.phone }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="crm-field-label">О мастере</label>
+      {{ form.bio }}
+    </div>
+
+    <!-- Section: Фото -->
+    <div class="form-section-label"><i class="bi bi-image me-2"></i>Фото</div>
+    <div class="mb-3">
+      {% if object.photo %}
+      <div class="d-flex align-items-center gap-3 mb-2">
+        <img src="{{ object.photo.url }}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--crm-gold-border)">
+        <span style="font-size:.8rem;color:var(--crm-text-muted)">Текущее фото</span>
+      </div>
+      {% endif %}
+      {{ form.photo }}
+      <div style="font-size:.72rem;color:var(--crm-text-muted);margin-top:.35rem">JPG или PNG, до 5 МБ</div>
+    </div>
+
+    <!-- Section: Настройки -->
+    <div class="form-section-label"><i class="bi bi-gear me-2"></i>Настройки</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <label class="crm-field-label">Цвет в календаре</label>
+        <div class="d-flex align-items-center gap-2">
+          {{ form.color }}
+          <span style="font-size:.75rem;color:var(--crm-text-muted)" id="colorPreviewLabel">{{ object.color|default:"#c9a84c" }}</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="crm-field-label">Порядок в календаре</label>
+        {{ form.calendar_order }}
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <div class="crm-switch-wrap">
+          {{ form.is_active }}
+          <label for="{{ form.is_active.id_for_label }}" class="crm-switch-label">Активен</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Специализации -->
+    <div class="form-section-label"><i class="bi bi-award me-2"></i>Специализации</div>
+    <div class="mb-4">
+      <div class="specializations-grid">
+        {% for choice in form.specializations %}
+        <label class="spec-chip">
+          {{ choice.tag }}
+          <span>{{ choice.choice_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% if form.specializations.errors %}<div class="field-error mt-2">{{ form.specializations.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div style="height:1px;background:var(--crm-gold-border);margin-bottom:1.25rem"></div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-gold flex-grow-1">
+        <i class="bi bi-check-lg me-1"></i>Сохранить
+      </button>
+      <a href="{% url 'staff:list' %}" class="btn btn-ghost">Отмена</a>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+
+<style>
+.crm-field-label { display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--crm-text-muted); font-weight:600; margin-bottom:.4rem; }
+.text-gold { color:var(--crm-gold); }
+.field-error { color:#f66; font-size:.75rem; margin-top:.3rem; }
+.form-section-label {
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.12em;
+  color:var(--crm-gold); font-weight:700;
+  padding:.4rem 0; margin-bottom:.75rem; margin-top:.25rem;
+  border-bottom:1px solid rgba(201,168,76,.15);
+  display:flex; align-items:center;
+}
+.crm-switch-wrap { display:flex; align-items:center; gap:.6rem; padding:.5rem 0; }
+.crm-switch-wrap input[type=checkbox] { width:36px; height:20px; cursor:pointer; accent-color:var(--crm-gold); }
+.crm-switch-label { font-size:.875rem; color:var(--crm-text-primary); cursor:pointer; margin:0; }
+
+/* Specialization chips */
+.specializations-grid { display:flex; flex-wrap:wrap; gap:.5rem; }
+.spec-chip {
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.35rem .85rem; border-radius:20px; cursor:pointer;
+  border:1px solid var(--crm-border); color:var(--crm-text-muted);
+  font-size:.8rem; font-weight:500; transition:all .15s;
+  user-select:none;
+}
+.spec-chip input[type=checkbox] { display:none; }
+.spec-chip:hover { border-color:var(--crm-gold-border); color:var(--crm-gold); }
+.spec-chip:has(input:checked) {
+  background:var(--crm-gold-muted); border-color:var(--crm-gold);
+  color:var(--crm-gold); font-weight:600;
+}
+</style>
+
+<script>
+// Update color label
+var colorInput = document.getElementById('{{ form.color.id_for_label }}');
+var colorLabel = document.getElementById('colorPreviewLabel');
+if (colorInput && colorLabel) {
+  colorInput.addEventListener('input', function() {
+    colorLabel.textContent = colorInput.value;
+  });
+}
+</script>
+{% endblock %}

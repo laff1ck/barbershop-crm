@@ -1,0 +1,10 @@
+from django.contrib import admin
+from .models import UserProfile
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display  = ['user', 'role']
+    list_filter   = ['role']
+    raw_id_fields = ['user']
+    list_editable = ['role']

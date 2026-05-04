@@ -1,0 +1,278 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Войти | The Cut CRM</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  <style>
+    body {
+      min-height: 100vh;
+      background: var(--crm-bg-primary);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .login-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .login-bg-circle {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,.07) 0%, transparent 70%);
+    }
+    .login-bg-circle-1 { width: 600px; height: 600px; top: -150px; right: -100px; }
+    .login-bg-circle-2 { width: 400px; height: 400px; bottom: -100px; left: -80px; }
+
+    .login-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px; padding: 1.5rem;
+    }
+    .login-logo { text-align: center; margin-bottom: 2rem; }
+    .login-logo-icon {
+      width: 72px; height: 72px; margin: 0 auto 1rem;
+      background: var(--crm-gold-muted); border: 1px solid var(--crm-gold-border);
+      border-radius: 20px; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: var(--crm-gold); box-shadow: 0 0 40px rgba(201,168,76,.15);
+    }
+    .login-logo-title {
+      font-family: 'Playfair Display', serif;
+      color: var(--crm-gold); font-size: 2rem; font-weight: 700;
+      letter-spacing: .05em; line-height: 1;
+    }
+    .login-logo-sub {
+      color: var(--crm-text-muted); font-size: .7rem;
+      text-transform: uppercase; letter-spacing: .2em; margin-top: .4rem;
+    }
+
+    /* Role chooser tabs */
+    .role-tabs {
+      display: flex; gap: .5rem; margin-bottom: 1.5rem;
+      background: var(--crm-bg-secondary); border-radius: 12px;
+      padding: .3rem; border: 1px solid var(--crm-border);
+    }
+    .role-tab {
+      flex: 1; padding: .55rem .5rem; border-radius: 9px;
+      border: none; background: transparent;
+      color: var(--crm-text-muted); font-size: .82rem; font-weight: 600;
+      letter-spacing: .03em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: .45rem;
+      transition: all .2s;
+    }
+    .role-tab.active {
+      background: var(--crm-gold-muted);
+      border: 1px solid var(--crm-gold-border);
+      color: var(--crm-gold);
+      box-shadow: 0 2px 10px rgba(201,168,76,.15);
+    }
+    .role-tab:not(.active):hover { color: var(--crm-text-primary); }
+
+    /* Panels */
+    .role-panel { display: none; }
+    .role-panel.active { display: block; }
+
+    /* Card */
+    .login-card {
+      background: var(--crm-bg-card); border: 1px solid var(--crm-gold-border);
+      border-radius: 16px; padding: 1.75rem 2rem;
+      box-shadow: 0 8px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(201,168,76,.08);
+    }
+    .login-field-label {
+      font-size: .7rem; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--crm-text-muted);
+      font-weight: 600; margin-bottom: .5rem; display: block;
+    }
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .input-icon {
+      position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
+      color: var(--crm-text-muted); font-size: .95rem; pointer-events: none;
+      transition: color .2s;
+    }
+    .input-icon-wrap:focus-within .input-icon { color: var(--crm-gold); }
+    .input-icon-wrap .form-control { padding-left: 2.5rem !important; }
+    .pw-toggle {
+      position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--crm-text-muted);
+      cursor: pointer; padding: .25rem; font-size: .95rem; line-height: 1;
+    }
+    .pw-toggle:hover { color: var(--crm-gold); }
+
+    .btn-login {
+      width: 100%; padding: .7rem 1.5rem;
+      background: linear-gradient(135deg, var(--crm-gold), var(--crm-gold-dark));
+      border: none; border-radius: 10px;
+      color: #0a0a0a; font-weight: 700; font-size: .95rem; letter-spacing: .03em;
+      box-shadow: 0 4px 20px rgba(201,168,76,.35); transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+    }
+    .btn-login:hover {
+      background: linear-gradient(135deg, var(--crm-gold-light), var(--crm-gold));
+      box-shadow: 0 6px 28px rgba(201,168,76,.5); transform: translateY(-1px);
+    }
+    .btn-login:active { transform: translateY(0); }
+
+    /* Client panel */
+    .client-book-card {
+      text-align: center; padding: 1.5rem .5rem;
+    }
+    .client-book-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--crm-gold-muted); border: 1px solid var(--crm-gold-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; color: var(--crm-gold); margin: 0 auto 1rem;
+    }
+    .client-book-title {
+      color: var(--crm-text-primary); font-size: 1.1rem; font-weight: 700;
+      margin-bottom: .4rem;
+    }
+    .client-book-desc {
+      color: var(--crm-text-muted); font-size: .83rem; line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+    .btn-book-now {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .6rem; padding: .75rem 2rem; border-radius: 12px;
+      background: linear-gradient(135deg, #c9a84c, #a07830);
+      color: #0a0a0a; font-weight: 700; font-size: .95rem;
+      text-decoration: none; border: none;
+      box-shadow: 0 4px 20px rgba(201,168,76,.4); transition: all .2s;
+      width: 100%;
+    }
+    .btn-book-now:hover {
+      background: linear-gradient(135deg, #dab95c, #c9a84c);
+      box-shadow: 0 6px 28px rgba(201,168,76,.55);
+      color: #0a0a0a; transform: translateY(-1px);
+    }
+    .client-features {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .6rem;
+      margin-bottom: 1.5rem; text-align: left;
+    }
+    .client-feature {
+      background: var(--crm-bg-secondary); border: 1px solid var(--crm-border);
+      border-radius: 10px; padding: .6rem .75rem;
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .77rem; color: var(--crm-text-muted);
+    }
+    .client-feature i { color: var(--crm-gold); font-size: .85rem; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div class="login-bg">
+  <div class="login-bg-circle login-bg-circle-1"></div>
+  <div class="login-bg-circle login-bg-circle-2"></div>
+</div>
+
+<div class="login-wrap">
+
+  <!-- Logo -->
+  <div class="login-logo">
+    <div class="login-logo-icon"><i class="bi bi-scissors"></i></div>
+    <div class="login-logo-title">THE CUT</div>
+    <div class="login-logo-sub">Barbershop</div>
+  </div>
+
+  <!-- Card -->
+  <div class="login-card">
+
+    <!-- Tabs -->
+    <div class="role-tabs">
+      <button class="role-tab active" id="tabClient" onclick="switchTab('client')">
+        <i class="bi bi-calendar2-heart-fill"></i> Записаться
+      </button>
+      <button class="role-tab" id="tabStaff" onclick="switchTab('staff')">
+        <i class="bi bi-shield-lock-fill"></i> Персонал
+      </button>
+    </div>
+
+    <!-- Staff login panel -->
+    <div class="role-panel" id="panelStaff">
+      <form method="post" autocomplete="off">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div style="background:rgba(220,53,69,.1);border:1px solid rgba(220,53,69,.3);color:#f66;border-radius:10px;padding:.75rem 1rem;font-size:.83rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          Неверный логин или пароль. Попробуйте ещё раз.
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="login-field-label"><i class="bi bi-person me-1"></i>Логин</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-person-fill input-icon"></i>
+            <input name="username" type="text" class="form-control"
+              placeholder="Введите логин" autofocus autocomplete="username"
+              style="height:46px">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="login-field-label"><i class="bi bi-lock me-1"></i>Пароль</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-lock-fill input-icon"></i>
+            <input name="password" type="password" id="pwField" class="form-control"
+              placeholder="Введите пароль" autocomplete="current-password"
+              style="height:46px;padding-right:2.75rem">
+            <button type="button" class="pw-toggle" id="pwToggle" tabindex="-1">
+              <i class="bi bi-eye-slash" id="pwToggleIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <i class="bi bi-box-arrow-in-right"></i> Войти в систему
+        </button>
+      </form>
+    </div>
+
+    <!-- Client booking panel -->
+    <div class="role-panel active" id="panelClient">
+      <div class="client-book-card">
+        <div class="client-book-icon"><i class="bi bi-scissors"></i></div>
+        <div class="client-book-title">Забронировать визит</div>
+        <div class="client-book-desc">Выберите мастера, услугу и удобное время — за пару минут.</div>
+
+        <div class="client-features">
+          <div class="client-feature"><i class="bi bi-person-badge"></i> Выбор мастера</div>
+          <div class="client-feature"><i class="bi bi-scissors"></i> Выбор услуги</div>
+          <div class="client-feature"><i class="bi bi-calendar3"></i> Удобное время</div>
+          <div class="client-feature"><i class="bi bi-check2-circle"></i> Онлайн запись</div>
+        </div>
+
+        <a href="/book/" class="btn-book-now">
+          <i class="bi bi-calendar2-plus-fill"></i> Записаться онлайн
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center;margin-top:1.25rem;font-size:.72rem;color:var(--crm-text-dim)">
+    The Cut &copy; {% now "Y" %} &mdash; Barbershop
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.getElementById('tabStaff').classList.toggle('active', tab === 'staff');
+  document.getElementById('tabClient').classList.toggle('active', tab === 'client');
+  document.getElementById('panelStaff').classList.toggle('active', tab === 'staff');
+  document.getElementById('panelClient').classList.toggle('active', tab === 'client');
+}
+
+var pwToggle = document.getElementById('pwToggle');
+if (pwToggle) {
+  pwToggle.addEventListener('click', function() {
+    var field = document.getElementById('pwField');
+    var icon  = document.getElementById('pwToggleIcon');
+    if (field.type === 'password') {
+      field.type = 'text'; icon.className = 'bi bi-eye';
+    } else {
+      field.type = 'password'; icon.className = 'bi bi-eye-slash';
+    }
+  });
+}
+
+// If redirected after failed login, stay on staff tab (default)
+</script>
+</body>
+</html>

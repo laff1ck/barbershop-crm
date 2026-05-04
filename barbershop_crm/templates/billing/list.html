@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Платежи{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Плате<span>жи</span></h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'billing:reports' %}" class="btn btn-ghost"><i class="bi bi-bar-chart me-1"></i>Отчёты</a>
+    <a href="{% url 'billing:export' %}" class="btn btn-ghost"><i class="bi bi-download me-1"></i>CSV</a>
+  </div>
+</div>
+<!-- Filters -->
+<div class="crm-card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div>
+      <label class="form-label mb-1" style="font-size:.75rem;color:var(--crm-text-muted)">Мастер</label>
+      <select name="master" class="form-select" style="max-width:200px">
+        <option value="">Все мастера</option>
+        {% for m in masters %}<option value="{{ m.pk }}" {% if master_filter == m.pk|stringformat:'s' %}selected{% endif %}>{{ m.display_name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label mb-1" style="font-size:.75rem;color:var(--crm-text-muted)">С</label>
+      <input type="date" name="date_from" value="{{ date_from }}" class="form-control" style="max-width:160px">
+    </div>
+    <div>
+      <label class="form-label mb-1" style="font-size:.75rem;color:var(--crm-text-muted)">По</label>
+      <input type="date" name="date_to" value="{{ date_to }}" class="form-control" style="max-width:160px">
+    </div>
+    <button type="submit" class="btn btn-gold"><i class="bi bi-funnel"></i></button>
+    {% if master_filter or date_from or date_to %}<a href="{% url 'billing:list' %}" class="btn btn-ghost">Сбросить</a>{% endif %}
+  </form>
+</div>
+<div class="crm-card">
+  <div class="table-responsive">
+    <table class="crm-table">
+      <thead><tr><th>Чек</th><th>Дата</th><th>Клиент</th><th>Мастер</th><th>Услуга</th><th>Сумма</th><th>Скидка</th><th>Способ</th><th></th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:.8rem">{{ p.receipt_number }}</td>
+          <td style="font-size:.8rem;white-space:nowrap">{{ p.paid_at|date:'d.m.Y H:i' }}</td>
+          <td>
+            <a href="{% url 'clients:detail' p.appointment.client.pk %}">{{ p.appointment.client.full_name }}</a>
+          </td>
+          <td>{{ p.appointment.master.display_name }}</td>
+          <td style="font-size:.85rem">{{ p.appointment.service.name }}</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--crm-gold)">{{ p.final_amount|currency }}</td>
+          <td>{% if p.discount %}<span style="color:#20c997">-{{ p.discount }}%</span>{% else %}—{% endif %}</td>
+          <td><span style="font-size:.8rem">{{ p.get_method_display }}</span></td>
+          <td><a href="{% url 'billing:detail' p.pk %}" class="btn btn-ghost btn-sm"><i class="bi bi-receipt"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center py-4" style="color:var(--crm-text-muted)">Нет платежей</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

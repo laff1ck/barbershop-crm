@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Клиенты{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Клиент<span>ы</span></h1>
+  <a href="{% url 'clients:create' %}" class="btn btn-gold"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+</div>
+<!-- Filters -->
+<div class="crm-card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap">
+    <div class="search-input-group flex-grow-1" style="max-width:280px">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Имя, телефон...">
+    </div>
+    <select name="tier" class="form-select" style="max-width:155px">
+      <option value="">Все уровни</option>
+      {% for val,lbl in loyalty_tiers %}<option value="{{ val }}" {% if tier_filter == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+    </select>
+    <select name="last_visit" class="form-select" style="max-width:185px">
+      <option value="">Последний визит</option>
+      <option value="7"    {% if last_visit_filter == '7'     %}selected{% endif %}>За 7 дней</option>
+      <option value="30"   {% if last_visit_filter == '30'    %}selected{% endif %}>За 30 дней</option>
+      <option value="90"   {% if last_visit_filter == '90'    %}selected{% endif %}>За 3 месяца</option>
+      <option value="old"  {% if last_visit_filter == 'old'   %}selected{% endif %}>Давно (>3 мес.)</option>
+      <option value="never"{% if last_visit_filter == 'never' %}selected{% endif %}>Никогда</option>
+    </select>
+    <button type="submit" class="btn btn-gold"><i class="bi bi-funnel"></i></button>
+    {% if q or tier_filter or last_visit_filter %}<a href="{% url 'clients:list' %}" class="btn btn-ghost">Сбросить</a>{% endif %}
+  </form>
+</div>
+<!-- Table -->
+<div class="crm-card">
+  <div class="table-responsive">
+    <table class="crm-table">
+      <thead><tr>
+        <th>Клиент</th><th>Телефон</th><th>Уровень</th>
+        <th>Визиты</th><th>Потрачено</th><th>Последний визит</th><th></th>
+      </tr></thead>
+      <tbody>
+        {% for c in clients %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              {% if c.photo %}<img src="{{ c.photo.url }}" class="avatar">
+              {% else %}<div class="avatar-initials">{{ c.initials }}</div>{% endif %}
+              <div>
+                <div style="font-weight:600">{{ c.full_name }}</div>
+                <div style="font-size:.75rem;color:var(--crm-text-muted)">{{ c.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:.85rem">{{ c.phone }}</td>
+          <td><span class="tier-badge tier-{{ c.loyalty_tier }}">
+            {% if c.loyalty_tier == 'platinum' %}<i class="bi bi-gem"></i>
+            {% elif c.loyalty_tier == 'gold' %}<i class="bi bi-star-fill"></i>
+            {% elif c.loyalty_tier == 'silver' %}<i class="bi bi-star-half"></i>
+            {% else %}<i class="bi bi-star"></i>{% endif %}
+            {{ c.get_loyalty_tier_display }}
+          </span></td>
+          <td>{{ c.visit_count }}</td>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--crm-gold)">{{ c.total_spent|currency }}</td>
+          <td style="font-size:.8rem;color:var(--crm-text-muted)">
+            {% if c.last_visit %}{{ c.last_visit|date:'d.m.Y' }}{% else %}—{% endif %}
+          </td>
+          <td>
+            <a href="{% url 'clients:detail' c.pk %}" class="btn btn-ghost btn-sm">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center py-4" style="color:var(--crm-text-muted)">Клиентов не найдено</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Удалить клиента{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-5">
+  <div class="crm-card p-4 text-center">
+    <i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;color:#f66;display:block;margin-bottom:1rem"></i>
+    <h4 style="color:var(--crm-text-primary)">Удалить клиента?</h4>
+    <p style="color:var(--crm-text-muted)">{{ object.full_name }} будет удалён без возможности восстановления.</p>
+    <form method="post" class="d-flex gap-2 justify-content-center mt-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Удалить</button>
+      <a href="{% url 'clients:detail' object.pk %}" class="btn btn-ghost">Отмена</a>
+    </form>
+  </div>
+</div></div>
+{% endblock %}

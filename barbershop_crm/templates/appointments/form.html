@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Изменить запись{% else %}Новая запись{% endif %}{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Field labels ── */
+.crm-field-label {
+  display: block; font-size: .7rem; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--crm-text-muted);
+  font-weight: 600; margin-bottom: .45rem;
+}
+.text-gold { color: var(--crm-gold); }
+.field-error { color: #f66; font-size: .75rem; margin-top: .3rem; display: flex; align-items: center; gap: .3rem; }
+
+/* ── Section labels ── */
+.form-section {
+  font-size: .65rem; text-transform: uppercase; letter-spacing: .14em;
+  color: var(--crm-gold); font-weight: 700;
+  padding: .35rem 0; margin: 1.1rem 0 .9rem;
+  border-bottom: 1px solid rgba(201,168,76,.15);
+  display: flex; align-items: center; gap: .5rem;
+}
+.form-section:first-child { margin-top: 0; }
+
+/* ── Custom select ── */
+.cs-wrap {
+  position: relative;
+}
+.cs-wrap select {
+  appearance: none; -webkit-appearance: none;
+  width: 100%; padding: .6rem 2.4rem .6rem .85rem;
+  background: var(--crm-bg-elevated);
+  border: 1px solid var(--crm-border-subtle);
+  border-radius: 9px; color: var(--crm-text-primary);
+  font-size: .875rem; cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none; line-height: 1.4;
+}
+.cs-wrap select:focus {
+  border-color: var(--crm-gold-border);
+  box-shadow: 0 0 0 3px var(--crm-gold-muted);
+}
+.cs-wrap select option {
+  background: var(--crm-bg-elevated);
+  color: var(--crm-text-primary);
+  padding: .4rem;
+}
+.cs-arrow {
+  position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+  color: var(--crm-text-muted); pointer-events: none; font-size: .85rem;
+  transition: color .2s;
+}
+.cs-wrap:focus-within .cs-arrow { color: var(--crm-gold); }
+
+/* ── Client autocomplete ── */
+.ac-wrap { position: relative; }
+.ac-input {
+  width: 100%; padding: .6rem .85rem .6rem 2.4rem;
+  background: var(--crm-bg-elevated);
+  border: 1px solid var(--crm-border-subtle);
+  border-radius: 9px; color: var(--crm-text-primary);
+  font-size: .875rem; transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+.ac-input:focus {
+  border-color: var(--crm-gold-border);
+  box-shadow: 0 0 0 3px var(--crm-gold-muted);
+}
+.ac-input::placeholder { color: var(--crm-text-muted); }
+.ac-icon {
+  position: absolute; left: .8rem; top: 50%; transform: translateY(-50%);
+  color: var(--crm-text-muted); font-size: .9rem; pointer-events: none;
+  transition: color .2s; z-index: 1;
+}
+.ac-wrap:focus-within .ac-icon { color: var(--crm-gold); }
+.ac-clear {
+  position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--crm-text-muted);
+  cursor: pointer; font-size: .8rem; padding: .2rem; line-height: 1;
+  display: none; transition: color .2s;
+}
+.ac-clear:hover { color: var(--crm-gold); }
+.ac-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--crm-bg-elevated);
+  border: 1px solid var(--crm-gold-border);
+  border-radius: 10px; z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  max-height: 220px; overflow-y: auto;
+  display: none;
+}
+.ac-dropdown.open { display: block; }
+.ac-item {
+  padding: .6rem .9rem; cursor: pointer;
+  display: flex; align-items: center; gap: .7rem;
+  transition: background .15s; border-radius: 0;
+}
+.ac-item:first-child { border-radius: 10px 10px 0 0; }
+.ac-item:last-child  { border-radius: 0 0 10px 10px; }
+.ac-item:only-child  { border-radius: 10px; }
+.ac-item:hover, .ac-item.highlighted { background: rgba(201,168,76,.1); }
+.ac-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: var(--crm-gold-muted); border: 1px solid var(--crm-gold-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem; font-weight: 700; color: var(--crm-gold);
+}
+.ac-name { font-size: .85rem; font-weight: 600; color: var(--crm-text-primary); }
+.ac-phone { font-size: .72rem; color: var(--crm-text-muted); font-family: 'JetBrains Mono', monospace; }
+.ac-empty { padding: .75rem .9rem; font-size: .82rem; color: var(--crm-text-muted); text-align: center; }
+.ac-loading { padding: .75rem; text-align: center; }
+.ac-spinner { width: 18px; height: 18px; border: 2px solid var(--crm-border); border-top-color: var(--crm-gold); border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Client selected badge ── */
+.client-selected {
+  display: none; align-items: center; gap: .75rem;
+  padding: .6rem .9rem;
+  background: rgba(201,168,76,.07);
+  border: 1px solid var(--crm-gold-border);
+  border-radius: 9px; margin-top: .4rem;
+}
+.client-selected.show { display: flex; }
+.client-selected-info { flex: 1; min-width: 0; }
+.client-selected-name { font-size: .88rem; font-weight: 700; color: var(--crm-text-primary); }
+.client-selected-phone { font-size: .72rem; color: var(--crm-text-muted); font-family: 'JetBrains Mono', monospace; }
+.client-change-btn {
+  background: none; border: 1px solid var(--crm-border);
+  color: var(--crm-text-muted); border-radius: 7px;
+  font-size: .72rem; padding: .25rem .6rem; cursor: pointer;
+  transition: all .15s; flex-shrink: 0;
+}
+.client-change-btn:hover { border-color: var(--crm-gold-border); color: var(--crm-gold); }
+
+/* ── Date-time input ── */
+input[type="datetime-local"] {
+  background: var(--crm-bg-elevated) !important;
+  border: 1px solid var(--crm-border-subtle) !important;
+  border-radius: 9px !important; color: var(--crm-text-primary) !important;
+  padding: .6rem .85rem !important; font-size: .875rem !important;
+  width: 100%; outline: none; transition: border-color .2s, box-shadow .2s;
+  color-scheme: dark;
+}
+input[type="datetime-local"]:focus {
+  border-color: var(--crm-gold-border) !important;
+  box-shadow: 0 0 0 3px var(--crm-gold-muted) !important;
+}
+
+/* ── Notes textarea ── */
+textarea.form-control {
+  background: var(--crm-bg-elevated) !important;
+  border: 1px solid var(--crm-border-subtle) !important;
+  border-radius: 9px !important; color: var(--crm-text-primary) !important;
+  font-size: .875rem !important; resize: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+textarea.form-control:focus {
+  border-color: var(--crm-gold-border) !important;
+  box-shadow: 0 0 0 3px var(--crm-gold-muted) !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+  <h1 class="page-title">{% if object %}Изменить <span>запись</span>{% else %}Новая <span>запись</span>{% endif %}</h1>
+  <a href="{% url 'appointments:list' %}" class="btn btn-ghost"><i class="bi bi-arrow-left me-1"></i>Назад</a>
+</div>
+
+<div class="row justify-content-center">
+<div class="col-lg-7 col-md-9">
+<div class="crm-card p-0 overflow-hidden">
+
+  <!-- Card header -->
+  <div style="padding:1.1rem 1.5rem;border-bottom:1px solid var(--crm-gold-border);background:rgba(201,168,76,.04);display:flex;align-items:center;gap:.75rem">
+    <div style="width:36px;height:36px;border-radius:10px;background:var(--crm-gold-muted);border:1px solid var(--crm-gold-border);display:flex;align-items:center;justify-content:center;color:var(--crm-gold)">
+      <i class="bi bi-calendar-plus"></i>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--crm-text-primary)">{% if object %}Запись #{{ object.pk }}{% else %}Новая запись{% endif %}</div>
+      <div style="font-size:.72rem;color:var(--crm-text-muted)">{% if object %}Редактирование{% else %}Создание записи к мастеру{% endif %}</div>
+    </div>
+  </div>
+
+  <form method="post" class="p-4" id="apptForm">
+    {% csrf_token %}
+
+    <!-- ── Клиент ── -->
+    <div class="form-section"><i class="bi bi-person-fill"></i> Клиент</div>
+    <div class="mb-3">
+      <label class="crm-field-label">Клиент <span class="text-gold">*</span></label>
+
+      <!-- Hidden select for form submission (keep Django validation) -->
+      <div style="display:none">{{ form.client }}</div>
+
+      <!-- Autocomplete input -->
+      <div class="ac-wrap" id="clientAcWrap">
+        <i class="bi bi-search ac-icon"></i>
+        <input type="text" class="ac-input" id="clientSearch"
+          placeholder="Введите имя или телефон..."
+          autocomplete="off">
+        <button type="button" class="ac-clear" id="clientClear" onclick="clearClient()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="ac-dropdown" id="clientDropdown"></div>
+      </div>
+
+      <!-- Selected client badge -->
+      <div class="client-selected" id="clientSelected">
+        <div class="ac-avatar" id="selectedAvatar"></div>
+        <div class="client-selected-info">
+          <div class="client-selected-name" id="selectedName"></div>
+          <div class="client-selected-phone" id="selectedPhone"></div>
+        </div>
+        <button type="button" class="client-change-btn" onclick="clearClient()">
+          <i class="bi bi-pencil me-1"></i>Изменить
+        </button>
+      </div>
+
+      {% if form.client.errors %}<div class="field-error"><i class="bi bi-exclamation-circle"></i>{{ form.client.errors.0 }}</div>{% endif %}
+    </div>
+
+    <!-- ── Услуга и мастер ── -->
+    <div class="form-section"><i class="bi bi-scissors"></i> Услуга и мастер</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="crm-field-label">Мастер <span class="text-gold">*</span></label>
+        <div class="cs-wrap">
+          {{ form.master }}
+          <i class="bi bi-chevron-down cs-arrow"></i>
+        </div>
+        {% if form.master.errors %}<div class="field-error"><i class="bi bi-exclamation-circle"></i>{{ form.master.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="crm-field-label">Услуга <span class="text-gold">*</span></label>
+        <div class="cs-wrap">
+          {{ form.service }}
+          <i class="bi bi-chevron-down cs-arrow"></i>
+        </div>
+        {% if form.service.errors %}<div class="field-error"><i class="bi bi-exclamation-circle"></i>{{ form.service.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <!-- ── Время и статус ── -->
+    <div class="form-section"><i class="bi bi-clock"></i> Время и статус</div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-7">
+        <label class="crm-field-label">Дата и время начала <span class="text-gold">*</span></label>
+        {{ form.start_time }}
+        {% if form.start_time.errors %}<div class="field-error"><i class="bi bi-exclamation-circle"></i>{{ form.start_time.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="col-md-5">
+        <label class="crm-field-label">Статус</label>
+        <div class="cs-wrap">
+          {{ form.status }}
+          <i class="bi bi-chevron-down cs-arrow"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Примечания ── -->
+    <div class="form-section"><i class="bi bi-chat-left-text"></i> Примечания</div>
+    <div class="mb-4">
+      {{ form.notes }}
+    </div>
+
+    <div style="height:1px;background:var(--crm-gold-border);margin-bottom:1.25rem"></div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-gold flex-grow-1">
+        <i class="bi bi-check-lg me-1"></i>Сохранить запись
+      </button>
+      <a href="{% url 'appointments:list' %}" class="btn btn-ghost">Отмена</a>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+
+<script>
+// ── Client autocomplete ──────────────────────────────────────────────────
+var clientSelect  = document.getElementById('id_client');
+var clientSearch  = document.getElementById('clientSearch');
+var clientClear   = document.getElementById('clientClear');
+var clientDropdown = document.getElementById('clientDropdown');
+var clientSelected = document.getElementById('clientSelected');
+var acWrap        = document.getElementById('clientAcWrap');
+
+var searchTimer   = null;
+var selectedId    = clientSelect ? clientSelect.value : '';
+
+// Pre-fill if editing existing appointment
+{% if object and object.client %}
+setClient('{{ object.client.pk }}', '{{ object.client.full_name }}', '{{ object.client.phone }}');
+{% endif %}
+
+function initials(name) {
+  return name.split(' ').map(function(p) { return p[0] || ''; }).join('').slice(0, 2).toUpperCase();
+}
+
+function setClient(id, name, phone) {
+  selectedId = id;
+  clientSelect.value = id;
+
+  // Show badge
+  document.getElementById('selectedAvatar').textContent = initials(name);
+  document.getElementById('selectedName').textContent   = name;
+  document.getElementById('selectedPhone').textContent  = phone || '';
+  clientSelected.classList.add('show');
+
+  // Hide input
+  acWrap.style.display = 'none';
+  clientDropdown.classList.remove('open');
+}
+
+function clearClient() {
+  selectedId = '';
+  clientSelect.value = '';
+  clientSearch.value = '';
+  clientSelected.classList.remove('show');
+  acWrap.style.display = '';
+  clientSearch.focus();
+  clientClear.style.display = 'none';
+}
+
+clientSearch.addEventListener('input', function() {
+  var q = this.value.trim();
+  clientClear.style.display = q ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  if (q.length < 1) { clientDropdown.classList.remove('open'); return; }
+  clientDropdown.innerHTML = '<div class="ac-loading"><div class="ac-spinner"></div></div>';
+  clientDropdown.classList.add('open');
+  searchTimer = setTimeout(function() { fetchClients(q); }, 220);
+});
+
+clientSearch.addEventListener('keydown', function(e) {
+  var items = clientDropdown.querySelectorAll('.ac-item');
+  var hi = clientDropdown.querySelector('.ac-item.highlighted');
+  var idx = Array.from(items).indexOf(hi);
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (idx < items.length - 1) {
+      if (hi) hi.classList.remove('highlighted');
+      items[idx + 1].classList.add('highlighted');
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (idx > 0) {
+      hi.classList.remove('highlighted');
+      items[idx - 1].classList.add('highlighted');
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    var target = hi || items[0];
+    if (target) target.click();
+  } else if (e.key === 'Escape') {
+    clientDropdown.classList.remove('open');
+  }
+});
+
+function fetchClients(q) {
+  fetch('/clients/search/?q=' + encodeURIComponent(q))
+    .then(function(r) { return r.json(); })
+    .then(function(data) { renderClients(data); })
+    .catch(function() { clientDropdown.innerHTML = '<div class="ac-empty">Ошибка загрузки</div>'; });
+}
+
+function renderClients(clients) {
+  if (!clients.length) {
+    clientDropdown.innerHTML = '<div class="ac-empty">Клиент не найден</div>';
+    return;
+  }
+  clientDropdown.innerHTML = clients.map(function(c) {
+    var name = (c.last_name + ' ' + c.first_name).trim();
+    var ini  = initials(name);
+    return '<div class="ac-item" data-id="' + c.id + '" data-name="' + name + '" data-phone="' + (c.phone||'') + '">'
+      + '<div class="ac-avatar">' + ini + '</div>'
+      + '<div><div class="ac-name">' + name + '</div>'
+      + (c.phone ? '<div class="ac-phone">' + c.phone + '</div>' : '')
+      + '</div></div>';
+  }).join('');
+  clientDropdown.querySelectorAll('.ac-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      setClient(this.dataset.id, this.dataset.name, this.dataset.phone);
+    });
+  });
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  if (!acWrap.contains(e.target)) clientDropdown.classList.remove('open');
+});
+</script>
+{% endblock %}

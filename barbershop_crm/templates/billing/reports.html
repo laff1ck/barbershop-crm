@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Отчёты{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Отчё<span>ты</span></h1>
+  <a href="{% url 'billing:export' %}" class="btn btn-ghost"><i class="bi bi-download me-1"></i>Скачать CSV</a>
+</div>
+
+<!-- Filter form -->
+<div class="crm-card mb-4 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div>
+      <label class="form-label mb-1" style="font-size:.75rem;color:var(--crm-text-muted)">Мастер</label>
+      <select name="master" class="form-select" style="max-width:200px">
+        <option value="">Все мастера</option>
+        {% for m in masters %}<option value="{{ m.pk }}" {% if master_filter == m.pk|stringformat:'s' %}selected{% endif %}>{{ m.display_name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label mb-1" style="font-size:.75rem;color:var(--crm-text-muted)">С</label>
+      <input type="date" name="date_from" value="{{ date_from }}" class="form-control" style="max-width:160px">
+    </div>
+    <div>
+      <label class="form-label mb-1" style="font-size:.75rem;color:var(--crm-text-muted)">По</label>
+      <input type="date" name="date_to" value="{{ date_to }}" class="form-control" style="max-width:160px">
+    </div>
+    <button type="submit" class="btn btn-gold"><i class="bi bi-funnel me-1"></i>Применить</button>
+    {% if master_filter or request.GET.date_from or request.GET.date_to %}
+      <a href="{% url 'billing:reports' %}" class="btn btn-ghost">Сбросить</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Summary KPI -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(201,168,76,.15)"><i class="bi bi-cash text-warning"></i></div>
+      <div class="kpi-value">{{ month_revenue|currency }}</div>
+      <div class="kpi-label">Выручка за период</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(13,202,240,.1)"><i class="bi bi-receipt" style="color:#0dcaf0"></i></div>
+      <div class="kpi-value">{{ month_count }}</div>
+      <div class="kpi-label">Оплат за период</div>
+    </div>
+  </div>
+  {% if month_count %}
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(32,201,151,.1)"><i class="bi bi-graph-up" style="color:#20c997"></i></div>
+      <div class="kpi-value">{{ avg_daily|floatformat:0 }} ₽</div>
+      <div class="kpi-label">Средний чек за день</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Revenue chart -->
+<div class="crm-card mb-4 p-4">
+  <h6 class="card-title-gold mb-3"><i class="bi bi-bar-chart me-2"></i>Выручка по дням</h6>
+  <canvas id="revenueChart" height="80"></canvas>
+</div>
+
+<!-- Master report -->
+{% if master_stats %}
+<div class="crm-card mb-4 p-4">
+  <h6 class="card-title-gold mb-3"><i class="bi bi-people me-2"></i>Отчёт по мастерам</h6>
+  <div class="row g-4">
+    <div class="col-md-7">
+      <div class="table-responsive">
+        <table class="crm-table">
+          <thead>
+            <tr>
+              <th>Мастер</th>
+              <th class="text-end">Визиты</th>
+              <th class="text-end">Выручка</th>
+              <th class="text-end">Ср. чек</th>
+              <th style="width:120px">Доля</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% with total_all=month_revenue %}
+            {% for row in master_stats %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <span style="width:10px;height:10px;border-radius:50%;background:{{ row.color }};display:inline-block;flex-shrink:0"></span>
+                  <span style="font-weight:600">{{ row.name }}</span>
+                </div>
+              </td>
+              <td class="text-end" style="font-family:'JetBrains Mono',monospace">{{ row.count }}</td>
+              <td class="text-end" style="font-family:'JetBrains Mono',monospace;color:var(--crm-gold)">{{ row.total|currency }}</td>
+              <td class="text-end" style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--crm-text-muted)">{{ row.avg|floatformat:0 }} ₽</td>
+              <td>
+                {% if total_all %}
+                  {% widthratio row.total total_all 100 as pct %}
+                  <div class="d-flex align-items-center gap-2">
+                    <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+                      <div style="width:{{ pct }}%;height:100%;background:{{ row.color }};border-radius:3px"></div>
+                    </div>
+                    <span style="font-size:.72rem;color:var(--crm-text-muted);min-width:30px">{{ pct }}%</span>
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            {% endwith %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <canvas id="masterChart" style="max-height:280px"></canvas>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <!-- Top masters list -->
+  <div class="col-md-6">
+    <div class="crm-card p-4">
+      <h6 class="card-title-gold mb-3"><i class="bi bi-trophy me-2"></i>Топ мастера</h6>
+      {% for row in top_masters %}
+      <div class="service-item justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <span style="width:8px;height:8px;border-radius:50%;background:{{ row.color }};display:inline-block"></span>
+          <span style="font-weight:600">{{ row.name }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span style="font-size:.75rem;color:var(--crm-text-muted)">{{ row.count }} визитов</span>
+          <span class="service-price">{{ row.total|currency }}</span>
+        </div>
+      </div>
+      {% empty %}<div style="color:var(--crm-text-muted)">Нет данных</div>
+      {% endfor %}
+    </div>
+  </div>
+  <!-- Top clients -->
+  <div class="col-md-6">
+    <div class="crm-card p-4">
+      <h6 class="card-title-gold mb-3"><i class="bi bi-star me-2"></i>Топ клиенты</h6>
+      {% for row in top_clients %}
+      <div class="service-item justify-content-between">
+        <a href="{% url 'clients:detail' row.appointment__client__pk %}" style="font-weight:600">
+          {{ row.appointment__client__first_name }} {{ row.appointment__client__last_name }}
+        </a>
+        <div class="d-flex align-items-center gap-3">
+          <span style="font-size:.75rem;color:var(--crm-text-muted)">{{ row.visits }} визитов</span>
+          <span class="service-price">{{ row.total|currency }}</span>
+        </div>
+      </div>
+      {% empty %}<div style="color:var(--crm-text-muted)">Нет данных</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+// Revenue chart
+(function() {
+  var ctx = document.getElementById('revenueChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ daily_labels|safe }},
+      datasets: [{
+        label: 'Выручка (руб.)',
+        data: {{ daily_totals|safe }},
+        backgroundColor: 'rgba(201,168,76,0.5)',
+        borderColor: '#c9a84c',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#7a7060' } } },
+      scales: {
+        x: { ticks: { color: '#7a7060' }, grid: { color: 'rgba(255,255,255,.04)' } },
+        y: { ticks: { color: '#7a7060' }, grid: { color: 'rgba(255,255,255,.04)' } }
+      }
+    }
+  });
+})();
+
+// Master donut chart
+{% if master_stats %}
+(function() {
+  var ctx = document.getElementById('masterChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: {{ master_labels|safe }},
+      datasets: [{
+        data: {{ master_totals_chart|safe }},
+        backgroundColor: {{ master_colors|safe }},
+        borderColor: '#1a1a1a',
+        borderWidth: 2,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#7a7060', padding: 12, font: { size: 12 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString('ru') + ' ₽';
+            }
+          }
+        }
+      }
+    }
+  });
+})();
+{% endif %}
+</script>
+{% endblock %}

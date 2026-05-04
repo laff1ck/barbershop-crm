@@ -1,0 +1,81 @@
+{% load static %}
+<aside class="crm-sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="d-flex align-items-center gap-2">
+      <div class="logo-icon"><i class="bi bi-scissors"></i></div>
+      <div>
+        <div class="logo-text">THE CUT</div>
+        <div class="logo-sub">Barbershop CRM</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="sidebar-section-label">Главное</span>
+    <a href="{% url 'core:dashboard' %}" class="nav-link {% if active_section == 'core' %}active{% endif %}">
+      <i class="bi bi-speedometer2"></i> Дашборд
+    </a>
+    <a href="{% url 'appointments:calendar' %}" class="nav-link {% if active_section == 'appointments' %}active{% endif %}">
+      <i class="bi bi-calendar3"></i> Календарь
+    </a>
+    <a href="{% url 'appointments:list' %}" class="nav-link">
+      <i class="bi bi-list-ul"></i> Записи
+    </a>
+
+    <span class="sidebar-section-label">Клиенты и Мастера</span>
+    <a href="{% url 'clients:list' %}" class="nav-link {% if active_section == 'clients' %}active{% endif %}">
+      <i class="bi bi-people"></i> Клиенты
+    </a>
+    <a href="{% url 'staff:list' %}" class="nav-link {% if active_section == 'staff' %}active{% endif %}">
+      <i class="bi bi-person-badge"></i> Мастера
+    </a>
+
+    {% if user_role != 'master' %}
+    <span class="sidebar-section-label">Услуги и Финансы</span>
+    <a href="{% url 'services:list' %}" class="nav-link {% if active_section == 'services' %}active{% endif %}">
+      <i class="bi bi-scissors"></i> Услуги
+    </a>
+    <a href="{% url 'billing:list' %}" class="nav-link {% if active_section == 'billing' %}active{% endif %}">
+      <i class="bi bi-cash-coin"></i> Платежи
+    </a>
+    <a href="{% url 'billing:reports' %}" class="nav-link">
+      <i class="bi bi-bar-chart-line"></i> Отчёты
+    </a>
+    {% endif %}
+
+    {% if user_role != 'master' %}
+    <span class="sidebar-section-label">Онлайн запись</span>
+    <a href="/book/" target="_blank" class="nav-link">
+      <i class="bi bi-calendar2-plus"></i> Страница записи
+    </a>
+    {% endif %}
+
+    {% if user_role == 'admin' %}
+    <span class="sidebar-section-label">Администрирование</span>
+    <a href="{% url 'accounts:users' %}" class="nav-link {% if active_section == 'accounts' %}active{% endif %}">
+      <i class="bi bi-people-fill"></i> Пользователи
+    </a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    {% if user.is_authenticated %}
+    <div class="d-flex align-items-center gap-2">
+      <div class="avatar-initials" style="width:32px;height:32px;font-size:.7rem">{{ user.username|slice:':2'|upper }}</div>
+      <div class="flex-1" style="min-width:0">
+        <div style="font-size:.8rem;color:var(--crm-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {{ user.get_full_name|default:user.username }}
+        </div>
+        <div style="font-size:.7rem;color:var(--crm-gold)">
+          {% if user_role == 'admin' %}Администратор
+          {% elif user_role == 'manager' %}Менеджер
+          {% elif user_role == 'master' %}Мастер
+          {% endif %}
+        </div>
+        <form method="post" action="{% url 'logout' %}" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" style="background:none;border:none;padding:0;font-size:.7rem;color:var(--crm-text-muted);cursor:pointer">Выйти</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</aside>

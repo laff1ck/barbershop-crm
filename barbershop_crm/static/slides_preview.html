@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<title>Слайды — Диплом</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a2e; font-family: 'Segoe UI', Arial, sans-serif; padding: 40px 20px; }
+  h1.page-title { color: #d4a017; text-align: center; font-size: 22px; margin-bottom: 40px; letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ─── slide wrapper ─── */
+  .slide {
+    width: 960px; aspect-ratio: 16/9; margin: 0 auto 60px;
+    border-radius: 12px; overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .slide-label {
+    color: #888; text-align: center; font-size: 13px; margin-top: -48px; margin-bottom: 60px;
+    letter-spacing: 1px;
+  }
+
+  /* ─── common header ─── */
+  .hdr {
+    background: #1C2B3A; height: 80px; position: relative;
+    display: flex; align-items: center; padding: 0 28px;
+  }
+  .hdr::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px; background: #D4A017;
+  }
+  .hdr h2 { color: #fff; font-size: 22px; font-weight: 700; flex: 1; }
+  .hdr .tag {
+    background: #D4A017; color: #1C2B3A; font-size: 11px; font-weight: 700;
+    padding: 5px 14px; border-radius: 20px; white-space: nowrap;
+  }
+  .slide-body { background: #f0f2f5; height: calc(100% - 80px); padding: 16px; display: flex; gap: 14px; }
+
+  /* ════════════════════════════════
+     SLIDE 1 — Тестирование
+  ════════════════════════════════ */
+  #s1 .slide-body { background: #eef1f5; }
+  .method-panel {
+    background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    width: 290px; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .method-panel .mp-hdr {
+    background: #0F4C75; color: #fff; font-size: 13px; font-weight: 700;
+    padding: 10px 16px; text-align: center;
+  }
+  .method-panel .mp-body { padding: 14px 16px; flex: 1; }
+  .mp-name { color: #0F4C75; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .mp-sub  { color: #555; font-size: 12px; margin-bottom: 12px; }
+  .mp-section { font-size: 11px; font-weight: 700; color: #1a1a1a; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .mp-item { font-size: 11.5px; color: #333; margin-bottom: 3px; padding-left: 4px; }
+  .mp-highlight { color: #0F4C75; font-size: 15px; font-weight: 800; margin: 4px 0 2px; }
+  .mp-pass { color: #1A6B2F; font-weight: 700; font-size: 13px; margin-top: 10px; }
+  .mp-pass-sub { color: #1A6B2F; font-size: 11.5px; }
+
+  .table-panel {
+    flex: 1; background: #fff; border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.1); overflow: hidden; display: flex; flex-direction: column;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead tr { background: #0F4C75; }
+  thead th { color: #fff; padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 700; }
+  tbody tr:nth-child(even) { background: #f0f7ff; }
+  tbody tr:nth-child(odd)  { background: #fff; }
+  tbody td { padding: 9px 8px; color: #222; border: 1px solid #e8edf2; vertical-align: middle; }
+  tbody td:first-child { text-align: center; font-weight: 700; }
+  tbody td:last-child  { text-align: center; color: #1A6B2F; font-weight: 700; font-size: 14px; }
+
+  /* ════════════════════════════════
+     SLIDE 2 — Развёртывание
+  ════════════════════════════════ */
+  #s2 .slide-body { background: #eef1f5; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
+  .dep-card {
+    width: calc(50% - 6px); border-radius: 10px; overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12); background: #fff;
+    display: flex; flex-direction: column;
+  }
+  .dep-card .dc-hdr {
+    color: #fff; padding: 10px 16px; display: flex; align-items: center; gap: 10px; position: relative;
+  }
+  .dc-num {
+    position: absolute; right: 12px; top: 10px;
+    background: rgba(255,255,255,.25); border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: #fff;
+  }
+  .dc-icon { font-size: 22px; }
+  .dc-title { font-size: 15px; font-weight: 700; }
+  .dep-card .dc-body { padding: 12px 16px; flex: 1; }
+  .dc-body li { font-size: 11.5px; color: #333; margin-bottom: 5px; list-style: none; padding-left: 14px; position: relative; }
+  .dc-body li::before { content: '•'; position: absolute; left: 0; color: inherit; font-weight: 700; }
+  .dep-card.blue   .dc-hdr { background: #0F4C75; }
+  .dep-card.teal   .dc-hdr { background: #1A4D4A; }
+  .dep-card.brown  .dc-hdr { background: #5C3D11; }
+  .dep-card.green  .dc-hdr { background: #1A6B2F; }
+  .dep-card.blue   .dc-body li::before { color: #0F4C75; }
+  .dep-card.teal   .dc-body li::before { color: #1A4D4A; }
+  .dep-card.brown  .dc-body li::before { color: #5C3D11; }
+  .dep-card.green  .dc-body li::before { color: #1A6B2F; }
+
+  /* ════════════════════════════════
+     SLIDE 3 — Структура кода
+  ════════════════════════════════ */
+  #s3 .slide-body { background: #eef1f5; }
+  .tree-panel {
+    background: #0D1117; border-radius: 10px; width: 310px; flex-shrink: 0;
+    padding: 16px 18px; overflow: hidden; border: 1px solid #30363D;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  }
+  .tree-root { color: #D4A017; font-size: 13px; font-weight: 700; font-family: 'Consolas', monospace; margin-bottom: 8px; }
+  .tree-line { font-family: 'Consolas', monospace; font-size: 11px; line-height: 1.8; white-space: pre; }
+  .tc-gold   { color: #D4A017; font-weight: 700; }
+  .tc-blue   { color: #58A6FF; }
+  .tc-green  { color: #3FB950; font-weight: 700; }
+  .tc-gray   { color: #ADBAC7; }
+
+  .mods-panel { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 1fr); gap: 8px; }
+  .mod-card {
+    background: #fff; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1); display: flex; align-items: stretch;
+  }
+  .mod-stripe { width: 10px; flex-shrink: 0; }
+  .mod-content { padding: 7px 10px; flex: 1; }
+  .mod-name { font-size: 11.5px; font-weight: 700; margin-bottom: 3px; }
+  .mod-desc { font-size: 10.5px; color: #555; line-height: 1.4; }
+</style>
+</head>
+<body>
+<h1 class="page-title">Дипломная презентация — визуальный просмотр</h1>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 1 — Тестирование
+══════════════════════════════════════════════════════════ -->
+<div class="slide" id="s1">
+  <div class="hdr">
+    <h2>Тестирование информационной системы</h2>
+    <div class="tag">Глава 3.5 · Функциональное тестирование</div>
+  </div>
+  <div class="slide-body">
+
+    <!-- Left: method panel -->
+    <div class="method-panel">
+      <div class="mp-hdr">Метод тестирования</div>
+      <div class="mp-body">
+        <div class="mp-name">Функциональное тестирование</div>
+        <div class="mp-sub">по принципу «чёрного ящика»</div>
+        <div class="mp-section">Критерии оценки</div>
+        <div class="mp-item">• Соответствие ожидаемому результату</div>
+        <div class="mp-item">• Корректность бизнес-логики</div>
+        <div class="mp-item">• Отсутствие критических ошибок</div>
+        <div class="mp-section">Охват</div>
+        <div class="mp-highlight">6 сценариев</div>
+        <div class="mp-sub">охватывают все 4 роли системы</div>
+        <div class="mp-section">Итог</div>
+        <div class="mp-pass">Все 6 — ПРОЙДЕНЫ ✓</div>
+        <div class="mp-pass-sub">Критических ошибок не выявлено</div>
+      </div>
+    </div>
+
+    <!-- Right: table -->
+    <div class="table-panel">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36px">№</th>
+            <th>Сценарий</th>
+            <th>Входные данные</th>
+            <th>Ожидаемый результат</th>
+            <th style="width:52px">Итог</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Создание записи администратором</td><td>Клиент, мастер, услуга, дата и время</td><td>Запись в расписании, статус «Запланирована»</td><td>✓</td></tr>
+          <tr><td>2</td><td>Изменение статуса записи мастером</td><td>Запись со статусом «Запланирована»</td><td>Статус «Завершена», кнопка оплаты активна</td><td>✓</td></tr>
+          <tr><td>3</td><td>Приём оплаты со скидкой</td><td>Сумма 2000 руб., скидка 10%, наличные</td><td>Платёж 1800 руб., чек сформирован</td><td>✓</td></tr>
+          <tr><td>4</td><td>Пересчёт уровня лояльности</td><td>Клиент: 4 визита, 5-й визит — оплата</td><td>visit_count=5, уровень и скидка обновлены</td><td>✓</td></tr>
+          <tr><td>5</td><td>Фильтрация отчётности</td><td>Период 01.03–31.03, выбранный мастер</td><td>Только данные за период и по мастеру</td><td>✓</td></tr>
+          <tr><td>6</td><td>Онлайн-запись клиента</td><td>Услуга, мастер, слот, имя и телефон</td><td>Запись создана, страница подтверждения</td><td>✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="slide-label">Слайд 1 из 3</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 2 — Развёртывание
+══════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="hdr">
+    <h2>Развёртывание и сопровождение системы</h2>
+    <div class="tag">Глава 3.6 · Deploy &amp; Maintenance</div>
+  </div>
+  <div class="slide-body">
+
+    <div class="dep-card blue">
+      <div class="dc-hdr">
+        <span class="dc-icon">🐳</span>
+        <span class="dc-title">Docker Compose</span>
+        <span class="dc-num">01</span>
+      </div>
+      <div class="dc-body"><ul>
+        <li>Контейнеризация всех компонентов системы</li>
+        <li>Изолированные сервисы: web / db / nginx</li>
+        <li><code>docker-compose up --build</code> — запуск в одну команду</li>
+        <li>Воспроизводимость среды на любом Linux-хосте</li>
+        <li>Переменные окружения через .env-файл</li>
+      </ul></div>
+    </div>
+
+    <div class="dep-card teal">
+      <div class="dc-hdr">
+        <span class="dc-icon">⚡</span>
+        <span class="dc-title">Gunicorn + Nginx</span>
+        <span class="dc-num">02</span>
+      </div>
+      <div class="dc-body"><ul>
+        <li>Gunicorn: WSGI-сервер для Django (4 workers)</li>
+        <li>Nginx: обратный прокси + раздача статики</li>
+        <li>HTTPS-терминация через SSL-сертификат</li>
+        <li>Статические файлы отдаются без Django</li>
+        <li>Соответствует нефункц. требованию безопасности</li>
+      </ul></div>
+    </div>
+
+    <div class="dep-card brown">
+      <div class="dc-hdr">
+        <span class="dc-icon">🗄️</span>
+        <span class="dc-title">PostgreSQL + миграции</span>
+        <span class="dc-num">03</span>
+      </div>
+      <div class="dc-body"><ul>
+        <li>База данных в отдельном Docker-контейнере</li>
+        <li>Том (volume) для постоянного хранения данных</li>
+        <li><code>python manage.py migrate</code> — применение схемы</li>
+        <li>Django Migrations: версионирование изменений</li>
+        <li>Автоматическое создание схемы при первом запуске</li>
+      </ul></div>
+    </div>
+
+    <div class="dep-card green">
+      <div class="dc-hdr">
+        <span class="dc-icon">🔧</span>
+        <span class="dc-title">Сопровождение</span>
+        <span class="dc-num">04</span>
+      </div>
+      <div class="dc-body"><ul>
+        <li>Журналы Gunicorn и Nginx через <code>docker logs</code></li>
+        <li>Резервное копирование БД: <code>pg_dump</code> по расписанию</li>
+        <li>Обновление: <code>git pull → migrate → restart</code></li>
+        <li>Команда <code>seed_data</code> для начальных данных</li>
+        <li>Django Admin — управление пользователями и ролями</li>
+      </ul></div>
+    </div>
+
+  </div>
+</div>
+<div class="slide-label">Слайд 2 из 3</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 3 — Структура кода
+══════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="hdr">
+    <h2>Структура программного кода</h2>
+    <div class="tag">Архитектура · Django MVT · 8 приложений</div>
+  </div>
+  <div class="slide-body">
+
+    <!-- Left: file tree -->
+    <div class="tree-panel">
+      <div class="tree-root">barbershop_crm/</div>
+      <div class="tree-line"><span class="tc-gold">├── apps/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── accounts/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── appointments/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── billing/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── booking/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── clients/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── core/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   ├── services/</span></div>
+      <div class="tree-line"><span class="tc-blue">│   └── staff/</span></div>
+      <div class="tree-line"><span class="tc-gold">├── config/</span></div>
+      <div class="tree-line"><span class="tc-green">│   ├── settings/</span></div>
+      <div class="tree-line"><span class="tc-gray">│   │   ├── base.py</span></div>
+      <div class="tree-line"><span class="tc-gray">│   │   └── development.py</span></div>
+      <div class="tree-line"><span class="tc-gray">│   ├── urls.py</span></div>
+      <div class="tree-line"><span class="tc-gray">│   └── wsgi.py</span></div>
+      <div class="tree-line"><span class="tc-gold">├── static/</span></div>
+      <div class="tree-line"><span class="tc-gray">│   ├── css/  theme.css</span></div>
+      <div class="tree-line"><span class="tc-gray">│   └── js/   main.js</span></div>
+      <div class="tree-line"><span class="tc-gold">├── templates/</span></div>
+      <div class="tree-line"><span class="tc-gray">│   ├── base.html</span></div>
+      <div class="tree-line"><span class="tc-gray">│   └── partials/</span></div>
+      <div class="tree-line"><span class="tc-green">└── manage.py</span></div>
+    </div>
+
+    <!-- Right: 8 module cards -->
+    <div class="mods-panel">
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#0F4C75"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#0F4C75">🔐 accounts</div>
+          <div class="mod-desc">Пользователи, роли,<br>аутентификация, mixins</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#1A4D4A"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#1A4D4A">📅 appointments</div>
+          <div class="mod-desc">Записи, расписание,<br>статусы, календарь</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#5C3D11"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#5C3D11">👤 clients</div>
+          <div class="mod-desc">Клиентская база,<br>программа лояльности</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#7B2D8B"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#7B2D8B">💳 billing</div>
+          <div class="mod-desc">Оплата, чеки,<br>финансовая отчётность</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#1A6B2F"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#1A6B2F">✂️ services</div>
+          <div class="mod-desc">Каталог услуг,<br>цены, длительность</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#1A4D4A"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#1A4D4A">👔 staff</div>
+          <div class="mod-desc">Мастера, профили,<br>специализации</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#0F4C75"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#0F4C75">🌐 booking</div>
+          <div class="mod-desc">Публичная онлайн-запись<br>для клиентов</div>
+        </div>
+      </div>
+
+      <div class="mod-card">
+        <div class="mod-stripe" style="background:#4A4A4A"></div>
+        <div class="mod-content">
+          <div class="mod-name" style="color:#4A4A4A">⚙️ core</div>
+          <div class="mod-desc">Дашборд, теги,<br>управляющие команды</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="slide-label">Слайд 3 из 3</div>
+
+</body>
+</html>

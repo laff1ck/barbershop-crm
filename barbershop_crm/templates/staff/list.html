@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Мастера{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Масте<span>ра</span></h1>
+  <a href="{% url 'staff:create' %}" class="btn btn-gold"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+</div>
+<div class="row g-3">
+  {% for master in masters %}
+  <div class="col-sm-6 col-lg-3">
+    <a href="{% url 'staff:detail' master.pk %}" style="text-decoration:none">
+      <div class="master-card" style="--master-color:{{ master.color }}">
+        <div class="d-flex flex-column align-items-center">
+          {% if master.photo %}
+          <img src="{{ master.photo.url }}" class="avatar avatar-xl mb-3">
+          {% else %}
+          <div class="avatar-initials avatar-xl mb-3" style="border-color:{{ master.color }}">
+            {{ master.display_name|slice:':2'|upper }}
+          </div>
+          {% endif %}
+          <h6 style="color:var(--crm-text-primary);font-weight:700;margin-bottom:.25rem">{{ master.display_name }}</h6>
+          <div style="font-size:.75rem;color:var(--crm-text-muted);margin-bottom:.75rem">
+            {% for spec in master.specializations.all %}{{ spec.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </div>
+          <div>{{ master.rating|stars }}</div>
+          <div style="font-size:.75rem;color:var(--crm-text-muted);margin-top:.5rem">
+            {{ master.appointments.count }} записей
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center py-5" style="color:var(--crm-text-muted)">Мастеров нет</div>
+  {% endfor %}
+</div>
+{% endblock %}

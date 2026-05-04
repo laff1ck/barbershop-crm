@@ -1,0 +1,135 @@
+/* ── Base: force dark on the entire calendar container ───────────────────── */
+#barber-calendar,
+#barber-calendar * {
+  box-sizing: border-box;
+}
+
+/* Every element inside calendar gets dark bg by default */
+#barber-calendar .fc-scroller,
+#barber-calendar .fc-scroller-harness,
+#barber-calendar .fc-scroller-liquid,
+#barber-calendar .fc-scroller-liquid-absolute,
+#barber-calendar .fc-view,
+#barber-calendar .fc-view-harness,
+#barber-calendar .fc-view-harness-active,
+#barber-calendar .fc-scrollgrid,
+#barber-calendar .fc-scrollgrid table,
+#barber-calendar .fc-scrollgrid td,
+#barber-calendar .fc-scrollgrid th,
+#barber-calendar .fc-scrollgrid-section > td,
+#barber-calendar .fc-scrollgrid-section-body > td,
+#barber-calendar .fc-scrollgrid-section-liquid > td,
+#barber-calendar .fc-timeline-body,
+#barber-calendar .fc-timeline-lane,
+#barber-calendar .fc-timeline-lane-frame,
+#barber-calendar .fc-timeline-slot,
+#barber-calendar .fc-timeline-slot-frame,
+#barber-calendar .fc-datagrid-body,
+#barber-calendar .fc-datagrid-cell,
+#barber-calendar .fc-datagrid-cell-frame,
+#barber-calendar .fc-resource-timeline-divider {
+  background-color: #161616 !important;
+}
+
+/* Header row (time labels) */
+#barber-calendar .fc-timeline-header,
+#barber-calendar .fc-timeline-header-row,
+#barber-calendar .fc-timeline-header .fc-timeline-slot,
+#barber-calendar .fc-timeline-header .fc-timeline-slot-frame,
+#barber-calendar .fc-resource-area-header {
+  background-color: #1e1e1e !important;
+}
+
+#barber-calendar .fc-non-business { background: rgba(0,0,0,.22) !important; }
+#barber-calendar .fc-today        { background: rgba(201,168,76,.04) !important; }
+#barber-calendar .fc-now-gold { border-color: var(--crm-gold) !important; }
+#barber-calendar .fc-now-gold::before { background: var(--crm-gold) !important; }
+
+/* ── Resource labels ─────────────────────────────────────────────────────── */
+#barber-calendar .fc-resource-group-cell { background: #1e1e1e !important; }
+#barber-calendar .fc .fc-timeline-slot-cushion { color: #7a7060 !important; }
+
+/* ── Event text ──────────────────────────────────────────────────────────── */
+#barber-calendar .fc-event .fc-event-card,
+#barber-calendar .fc-event .fc-event-card * { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+#barber-calendar .fc-event.fc-event-selected::after,
+#barber-calendar .fc-event:focus::after { opacity: 0 !important; }
+
+/* ── List view ───────────────────────────────────────────────────────────── */
+/* Day header */
+#barber-calendar .fc-list-day th,
+#barber-calendar .fc-list-day-cushion,
+#barber-calendar .fc-list-day .fc-cell-shaded {
+  background: #1a1814 !important;
+  color: var(--crm-gold) !important;
+}
+
+/* All rows dark */
+#barber-calendar .fc-list-table,
+#barber-calendar .fc-list-table td,
+#barber-calendar .fc-list-table th,
+#barber-calendar .fc-list-event-graphic,
+#barber-calendar .fc-list-event-time,
+#barber-calendar .fc-list-event-title {
+  background: #161616 !important;
+}
+
+/* Text */
+#barber-calendar .fc-list-event-title a { color: var(--crm-gold) !important; transition: color .15s; }
+#barber-calendar .fc-list-event-time    { color: var(--crm-gold) !important; }
+
+/* Hide duplicate time inside card in list view */
+#barber-calendar .fc-list-event .fc-event-card-header { display: none !important; }
+
+/* Gold for name, service, price inside list event card */
+#barber-calendar .fc-list-event .fc-event-card-name    { color: var(--crm-gold) !important; font-size: .9rem !important; }
+#barber-calendar .fc-list-event .fc-event-card-service { color: var(--crm-gold) !important; opacity: .75; }
+#barber-calendar .fc-list-event .fc-event-card-price   { color: var(--crm-gold) !important; }
+
+/* Hover */
+#barber-calendar .fc-list-event:hover .fc-list-event-graphic,
+#barber-calendar .fc-list-event:hover .fc-list-event-time,
+#barber-calendar .fc-list-event:hover .fc-list-event-title,
+#barber-calendar .fc-list-event:hover td {
+  background: rgba(201,168,76,.06) !important;
+}
+#barber-calendar .fc-list-event:hover .fc-list-event-title a { color: #f0e8cc !important; }
+#barber-calendar .fc-list-event:hover .fc-list-event-time    { color: var(--crm-gold) !important; }
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Toolbar */
+  .fc .fc-button { font-size: .75rem !important; padding: .3rem .5rem !important; }
+  .fc .fc-toolbar-title { font-size: .9rem !important; }
+  .fc .fc-toolbar.fc-header-toolbar { gap: .35rem; flex-wrap: wrap; }
+
+  /* Resource columns */
+  .fc-resource-area-header,
+  .fc-datagrid-cell { min-width: 72px !important; max-width: 72px !important; width: 72px !important; }
+  .fc-resource-avatar { width: 24px !important; height: 24px !important; font-size: .58rem !important; }
+  .fc-resource-name   { font-size: .62rem !important; }
+  .fc-timeline-slot   { min-width: 36px !important; }
+
+  /* Event cards */
+  .fc-event-card { padding: 2px 4px !important; min-height: 36px !important; }
+  .fc-event-card-name    { font-size: .68rem !important; }
+  .fc-event-card-service { font-size: .58rem !important; }
+  .fc-event-card-time    { font-size: .55rem !important; }
+  .fc-event-card-price   { font-size: .58rem !important; }
+
+  /* Filter buttons */
+  .master-filter-btn { font-size: .68rem !important; padding: .2rem .45rem !important; }
+
+  /* Appointment popup — full-width slide from right */
+  #apptPopup { width: 100% !important; right: -100% !important; border-left: none !important; }
+  #apptPopup.open { right: 0 !important; }
+
+  /* Legend */
+  .cal-legend { gap: .35rem !important; flex-wrap: wrap; }
+  .legend-item { font-size: .63rem !important; }
+
+  /* Calendar toolbar area — prevent overflow */
+  .cal-toolbar { gap: .5rem !important; }
+  .cal-quick-dates { gap: .3rem !important; flex-wrap: wrap; }
+  .cal-quick-dates .btn { font-size: .7rem !important; padding: .25rem .6rem !important; }
+}

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Принять оплату{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+  <h1 class="page-title">Принять <span>оплату</span></h1>
+  <a href="{% url 'appointments:detail' appointment.pk %}" class="btn btn-ghost">
+    <i class="bi bi-arrow-left me-1"></i>Назад
+  </a>
+</div>
+
+<div class="row justify-content-center">
+<div class="col-lg-5 col-md-7">
+
+  <!-- Appointment summary card -->
+  <div class="crm-card p-0 overflow-hidden mb-3">
+    <div style="padding:.9rem 1.25rem;background:rgba(201,168,76,.06);border-bottom:1px solid var(--crm-gold-border);display:flex;align-items:center;gap:.6rem">
+      <i class="bi bi-receipt" style="color:var(--crm-gold);font-size:1rem"></i>
+      <span style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--crm-gold);font-weight:700">Запись</span>
+    </div>
+    <div style="padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.65rem">
+      <div class="pay-row">
+        <span class="pay-label"><i class="bi bi-person me-1"></i>Клиент</span>
+        <span class="pay-val fw-bold">{{ appointment.client.full_name }}</span>
+      </div>
+      <div class="pay-row">
+        <span class="pay-label"><i class="bi bi-scissors me-1"></i>Мастер</span>
+        <span class="pay-val">{{ appointment.master.display_name }}</span>
+      </div>
+      <div class="pay-row">
+        <span class="pay-label"><i class="bi bi-tag me-1"></i>Услуга</span>
+        <span class="pay-val">{{ appointment.service.name }}</span>
+      </div>
+      <div class="pay-row">
+        <span class="pay-label"><i class="bi bi-clock me-1"></i>Время</span>
+        <span class="pay-val" style="font-family:'JetBrains Mono',monospace;font-size:.82rem">
+          {{ appointment.start_time|date:'d.m.Y H:i' }}
+        </span>
+      </div>
+      <div style="height:1px;background:var(--crm-gold-border);margin:.1rem 0"></div>
+      <div class="pay-row">
+        <span class="pay-label">Цена услуги</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--crm-gold)">
+          {{ appointment.service.price|currency }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment form -->
+  <div class="crm-card p-0 overflow-hidden">
+    <div style="padding:.9rem 1.25rem;background:rgba(201,168,76,.06);border-bottom:1px solid var(--crm-gold-border);display:flex;align-items:center;gap:.6rem">
+      <i class="bi bi-cash-coin" style="color:var(--crm-gold);font-size:1rem"></i>
+      <span style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--crm-gold);font-weight:700">Оплата</span>
+    </div>
+
+    <form method="post" class="p-4">
+      {% csrf_token %}
+
+      <!-- Amount -->
+      <div class="mb-3">
+        <label class="crm-field-label">Сумма <span style="color:var(--crm-gold)">*</span></label>
+        <div style="position:relative">
+          {{ form.amount }}
+          <span style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);color:var(--crm-gold);font-weight:700;pointer-events:none">₽</span>
+        </div>
+        {% if form.amount.errors %}<div class="field-error">{{ form.amount.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Discount -->
+      <div class="mb-3">
+        <label class="crm-field-label">Скидка</label>
+        <div style="position:relative">
+          {{ form.discount }}
+          <span style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);color:var(--crm-text-muted);font-size:.85rem;pointer-events:none">%</span>
+        </div>
+        <div id="discountPreview" style="display:none;margin-top:.35rem;font-size:.78rem;color:var(--crm-gold)"></div>
+      </div>
+
+      <!-- Method -->
+      <div class="mb-3">
+        <label class="crm-field-label">Способ оплаты <span style="color:var(--crm-gold)">*</span></label>
+        <div class="pay-method-grid" id="methodGrid">
+          {% for val, lbl in form.method.field.choices %}
+          <label class="pay-method-btn {% if form.method.value == val or forloop.first and not form.method.value %}selected{% endif %}">
+            <input type="radio" name="method" value="{{ val }}"
+              {% if form.method.value == val %}checked{% elif forloop.first and not form.method.value %}checked{% endif %}
+              style="display:none">
+            <i class="bi {% if val == 'cash' %}bi-cash{% elif val == 'card' %}bi-credit-card{% else %}bi-phone{% endif %}"></i>
+            <span>{{ lbl }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="mb-4">
+        <label class="crm-field-label">Примечание</label>
+        {{ form.notes }}
+      </div>
+
+      <!-- Total preview -->
+      <div id="totalPreview" style="background:rgba(201,168,76,.08);border:1px solid var(--crm-gold-border);border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.8rem;color:var(--crm-text-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Итого к оплате</span>
+        <span id="totalAmount" style="font-family:'JetBrains Mono',monospace;font-size:1.35rem;font-weight:800;color:var(--crm-gold)">—</span>
+      </div>
+
+      <button type="submit" class="btn btn-gold w-100" style="padding:.75rem;font-size:1rem;letter-spacing:.03em">
+        <i class="bi bi-check-circle me-2"></i>Принять оплату
+      </button>
+    </form>
+  </div>
+
+</div>
+</div>
+
+<style>
+.pay-row   { display:flex; justify-content:space-between; align-items:center; }
+.pay-label { font-size:.78rem; color:var(--crm-text-muted); }
+.pay-val   { font-size:.875rem; color:var(--crm-text-primary); }
+.crm-field-label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--crm-text-muted); font-weight:600; margin-bottom:.4rem; }
+.field-error { color:#f66; font-size:.75rem; margin-top:.3rem; }
+
+.pay-method-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
+.pay-method-btn {
+  display:flex; flex-direction:column; align-items:center; gap:.3rem;
+  padding:.65rem .5rem; border-radius:10px; cursor:pointer;
+  border:1px solid var(--crm-border); color:var(--crm-text-muted);
+  font-size:.78rem; font-weight:600; transition:all .15s; text-align:center;
+  user-select:none;
+}
+.pay-method-btn i { font-size:1.2rem; }
+.pay-method-btn:hover { border-color:var(--crm-gold-border); color:var(--crm-gold); }
+.pay-method-btn.selected { background:var(--crm-gold-muted); border-color:var(--crm-gold); color:var(--crm-gold); }
+</style>
+
+<script>
+// Method selector
+document.querySelectorAll('.pay-method-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.pay-method-btn').forEach(function(b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    btn.querySelector('input').checked = true;
+    updateTotal();
+  });
+});
+
+// Live total calculation
+var amountInput   = document.getElementById('{{ form.amount.id_for_label }}');
+var discountInput = document.getElementById('{{ form.discount.id_for_label }}');
+
+function updateTotal() {
+  var amount   = parseFloat(amountInput.value) || 0;
+  var discount = parseFloat(discountInput.value) || 0;
+  var total    = amount * (1 - discount / 100);
+
+  document.getElementById('totalAmount').textContent =
+    amount > 0 ? total.toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ₽' : '—';
+
+  var preview = document.getElementById('discountPreview');
+  if (discount > 0 && amount > 0) {
+    preview.style.display = 'block';
+    preview.textContent   = '−' + (amount - total).toLocaleString('ru-RU', {minimumFractionDigits:2}) + ' ₽ скидки';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+amountInput.addEventListener('input', updateTotal);
+discountInput.addEventListener('input', updateTotal);
+
+// Init with prefilled value
+document.addEventListener('DOMContentLoaded', updateTotal);
+updateTotal();
+</script>
+{% endblock %}

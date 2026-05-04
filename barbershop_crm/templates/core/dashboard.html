@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load crm_tags %}
+{% block title %}Дашборд{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title"><span>Дашборд</span></h1>
+  <div style="font-size:.8rem;color:var(--crm-text-muted)">{{ today|date:'d E Y' }}</div>
+</div>
+
+<!-- KPI ROW -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(201,168,76,.15)"><i class="bi bi-currency-dollar text-warning"></i></div>
+      <div class="kpi-value">{{ today_revenue|currency }}</div>
+      <div class="kpi-label">Выручка сегодня</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(13,202,240,.1)"><i class="bi bi-calendar-check" style="color:#0dcaf0"></i></div>
+      <div class="kpi-value">{{ appointments_today_count }}</div>
+      <div class="kpi-label">Записей сегодня</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(25,135,84,.15)"><i class="bi bi-currency-exchange" style="color:#20c997"></i></div>
+      <div class="kpi-value">{{ month_revenue|currency }}</div>
+      <div class="kpi-label">Выручка за месяц</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:rgba(111,66,193,.15)"><i class="bi bi-people" style="color:#b189f5"></i></div>
+      <div class="kpi-value">{{ total_clients }}</div>
+      <div class="kpi-label">Всего клиентов</div>
+    </div>
+  </div>
+</div>
+
+<!-- TODAY SCHEDULE -->
+<div class="crm-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h6 class="card-title-gold mb-0"><i class="bi bi-calendar-day me-2"></i>Расписание на сегодня</h6>
+    <a href="{% url 'appointments:calendar' %}" class="btn btn-ghost btn-sm">
+      <i class="bi bi-grid-3x3-gap me-1"></i>Открыть календарь
+    </a>
+  </div>
+  <div class="p-3">
+    {% if today_appointments %}
+    {% for appt in today_appointments %}
+    <a href="{% url 'appointments:detail' appt.pk %}" style="text-decoration:none">
+      <div class="appt-row">
+        <span class="appt-time">{{ appt.start_time|date:'H:i' }}</span>
+        <div class="avatar-initials">{{ appt.client.initials }}</div>
+        <div class="flex-grow-1" style="min-width:0">
+          <div style="font-weight:600;color:var(--crm-text-primary)">{{ appt.client.full_name }}</div>
+          <div style="font-size:.78rem;color:var(--crm-text-muted)">{{ appt.service.name }} · {{ appt.master.display_name }}</div>
+        </div>
+        <div>
+          <span class="badge-status status-{{ appt.status }}">{{ appt.get_status_display }}</span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;color:var(--crm-gold);font-weight:700;white-space:nowrap">
+          {{ appt.service.price|currency }}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-5" style="color:var(--crm-text-muted)">
+      <i class="bi bi-calendar-x" style="font-size:2.5rem;display:block;margin-bottom:.75rem;opacity:.4"></i>
+      На сегодня записей нет
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

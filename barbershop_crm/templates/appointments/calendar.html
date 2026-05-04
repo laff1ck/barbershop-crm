@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Календарь{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.css">
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+<style>
+/* ── Toolbar ── */
+.cal-toolbar { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem; }
+.cal-quick-dates { display:flex; gap:.4rem; flex-wrap:wrap; }
+.cal-quick-dates .btn { font-size:.75rem; padding:.3rem .75rem; }
+
+/* ── Resource label ── */
+.fc-resource-label { display:flex; flex-direction:column; align-items:center; padding:.5rem .25rem; gap:.3rem; }
+.fc-resource-avatar {
+  width:34px; height:34px; border-radius:50%;
+  background:var(--crm-gold-muted); border:1px solid var(--crm-gold-border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; font-weight:700; color:var(--crm-gold);
+}
+.fc-resource-name { font-size:.78rem; font-weight:600; color:var(--crm-text-primary); }
+
+/* ── Event card ── */
+.fc-event-card {
+  padding:4px 7px; min-height:56px;
+  display:flex; flex-direction:column; gap:2px; overflow:hidden;
+}
+.fc-event-card-header { display:flex; align-items:center; justify-content:space-between; }
+.fc-event-card-time {
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem; opacity:.9; font-weight:700; letter-spacing:.02em;
+}
+.fc-event-card-name { font-size:.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fc-event-card-service { font-size:.68rem; opacity:.75; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-style:italic; }
+.fc-event-card-price { font-size:.7rem; font-weight:700; opacity:.9; margin-top:1px; }
+
+/* ── Status dot ── */
+.fc-event-card-status { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.status-dot-pending     { background:#adb5bd; }
+.status-dot-confirmed   { background:#ffd700; }
+.status-dot-in_progress { background:#0dcaf0; }
+.status-dot-done        { background:#20c997; }
+.status-dot-cancelled   { background:#f66; }
+.status-dot-no_show     { background:#b189f5; }
+
+/* ── Now indicator ── */
+.fc-now-gold { border-color:var(--crm-gold) !important; }
+.fc-now-gold::before { background:var(--crm-gold) !important; }
+
+/* ── Loading overlay ── */
+#calLoader {
+  display:none; position:absolute; inset:0;
+  background:rgba(10,10,10,.5); z-index:10;
+  align-items:center; justify-content:center; border-radius:var(--crm-radius);
+}
+.cal-spinner {
+  width:36px; height:36px; border-radius:50%;
+  border:3px solid var(--crm-gold-muted); border-top-color:var(--crm-gold);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── Legend ── */
+.cal-legend { display:flex; gap:.75rem; flex-wrap:wrap; }
+.legend-item { display:flex; align-items:center; gap:.35rem; font-size:.72rem; color:var(--crm-text-muted); }
+.legend-dot  { width:9px; height:9px; border-radius:50%; }
+
+/* ── Appointment popup ── */
+#apptPopupBg {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+  z-index:1040;
+}
+#apptPopupBg.open { display:block; }
+
+#apptPopup {
+  position:fixed; top:0; right:-400px; width:360px; height:100dvh;
+  background:#1c1a14;
+  border-left:2px solid var(--crm-gold-border);
+  z-index:1050; display:flex; flex-direction:column;
+  transition:right .25s cubic-bezier(.4,0,.2,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,.7);
+}
+#apptPopup.open { right:0; }
+
+.pp-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1rem 1.25rem;
+  border-bottom:1px solid rgba(201,168,76,.25);
+  background:#141210;
+}
+.pp-title { font-size:1.05rem; font-weight:700; color:#f0e8cc; }
+.pp-close-btn {
+  background:none; border:none; color:#7a7060;
+  font-size:1.25rem; cursor:pointer; line-height:1; padding:2px 8px; border-radius:4px;
+}
+.pp-close-btn:hover { color:#c9a84c; background:rgba(201,168,76,.12); }
+
+.pp-body {
+  flex:1; overflow-y:auto; padding:1.25rem;
+  display:flex; flex-direction:column; gap:.85rem;
+  background:#1c1a14;
+}
+
+.pp-field { display:flex; flex-direction:column; gap:.25rem; }
+.pp-field-label {
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+  color:#c9a84c; font-weight:700;
+}
+.pp-field-value {
+  font-size:.975rem; color:#f0e8cc; font-weight:500; line-height:1.4;
+}
+
+.pp-divider { height:1px; background:rgba(201,168,76,.15); margin:.1rem 0; }
+
+.pp-actions-label {
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+  color:#c9a84c; font-weight:700; margin-bottom:.5rem;
+}
+#pp-actions { display:flex; flex-wrap:wrap; gap:.4rem; }
+#pp-actions .btn {
+  font-size:.78rem; padding:.3rem .75rem;
+  border:1px solid rgba(255,255,255,.12);
+  color:#d4cbb8; background:rgba(255,255,255,.05);
+  border-radius:6px;
+}
+#pp-actions .btn:hover { border-color:#c9a84c; color:#c9a84c; background:rgba(201,168,76,.1); }
+
+.pp-footer {
+  padding:1rem 1.25rem;
+  border-top:1px solid rgba(201,168,76,.2);
+  background:#141210;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header mb-3">
+  <h1 class="page-title">Кален<span>дарь</span></h1>
+  <a href="{% url 'appointments:create' %}" class="btn btn-gold">
+    <i class="bi bi-plus-lg me-1"></i>Новая запись
+  </a>
+</div>
+
+<!-- Toolbar -->
+<div class="cal-toolbar">
+  <span style="font-size:.75rem;color:var(--crm-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Перейти:</span>
+  <div class="cal-quick-dates">
+    {% load crm_tags %}
+    {% now "Y-m-d" as today_str %}
+    <button class="btn btn-ghost" data-cal-date="{{ today_str }}">Сегодня</button>
+  </div>
+  <div class="ms-auto cal-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#adb5bd"></div>Ожидает</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ffd700"></div>Подтверждён</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0dcaf0"></div>В процессе</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#20c997"></div>Завершён</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f66"></div>Отменён</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#b189f5"></div>Не явился</div>
+  </div>
+</div>
+
+<!-- Masters JSON -->
+<script id="masters-data" type="application/json">
+[{% for master in masters %}{"id":"{{ master.pk }}","title":"{{ master.display_name }}","eventColor":"{{ master.color }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
+
+<!-- Calendar -->
+<div class="crm-card p-3" style="position:relative">
+  <div id="calLoader"><div class="cal-spinner"></div></div>
+  <div id="barber-calendar"></div>
+</div>
+
+<!-- Master filter chips -->
+<div class="d-flex gap-2 mt-3 flex-wrap">
+  <span style="font-size:.75rem;color:var(--crm-text-muted);align-self:center">Мастер:</span>
+  {% for master in masters %}
+  <button class="btn btn-ghost btn-sm master-filter-btn" data-master="{{ master.pk }}"
+    style="border-left:3px solid {{ master.color }};">
+    {{ master.display_name }}
+  </button>
+  {% endfor %}
+  <button class="btn btn-ghost btn-sm" id="clearMasterFilter">Все</button>
+</div>
+
+<!-- Appointment popup backdrop -->
+<div id="apptPopupBg"></div>
+
+<!-- Appointment popup panel -->
+<div id="apptPopup">
+  <div class="pp-header">
+    <span class="pp-title">Запись</span>
+    <button class="pp-close-btn" id="pp-close" title="Закрыть">&#x2715;</button>
+  </div>
+  <div class="pp-body">
+    <div class="pp-field">
+      <span class="pp-field-label">Клиент</span>
+      <span class="pp-field-value" id="pp-client">—</span>
+    </div>
+    <div class="pp-field">
+      <span class="pp-field-label"><i class="bi bi-telephone"></i> Телефон</span>
+      <span class="pp-field-value" id="pp-phone">—</span>
+    </div>
+    <div class="pp-divider"></div>
+    <div class="pp-field">
+      <span class="pp-field-label">Мастер</span>
+      <span class="pp-field-value" id="pp-master">—</span>
+    </div>
+    <div class="pp-field">
+      <span class="pp-field-label">Услуга</span>
+      <span class="pp-field-value" id="pp-service">—</span>
+    </div>
+    <div class="pp-field">
+      <span class="pp-field-label"><i class="bi bi-clock"></i> Время</span>
+      <span class="pp-field-value" id="pp-time">—</span>
+    </div>
+    <div class="pp-field">
+      <span class="pp-field-label"><i class="bi bi-cash"></i> Стоимость</span>
+      <span class="pp-field-value" style="color:var(--crm-gold);font-family:'JetBrains Mono',monospace" id="pp-price">—</span>
+    </div>
+    <div class="pp-divider"></div>
+    <div class="pp-field">
+      <span class="pp-field-label">Статус</span>
+      <span id="pp-status" class="badge-status">—</span>
+    </div>
+    <div>
+      <div class="pp-actions-label">Изменить статус</div>
+      <div id="pp-actions"></div>
+    </div>
+  </div>
+  <div class="pp-footer">
+    <a id="pp-link" href="#" class="btn btn-gold w-100">
+      <i class="bi bi-pencil me-1"></i>Открыть запись
+    </a>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.master-filter-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.master-filter-btn').forEach(function(b) {
+      b.style.background = ''; b.style.color = '';
+    });
+    btn.style.background = 'var(--crm-gold-muted)';
+    btn.style.color = 'var(--crm-gold)';
+    if (window._barberCalendar) {
+      var srcs = window._barberCalendar.getEventSources();
+      srcs.forEach(function(s) { s.remove(); });
+      window._barberCalendar.addEventSource({
+        url: '/appointments/api/events/?master=' + btn.dataset.master,
+        method: 'GET'
+      });
+    }
+  });
+});
+document.getElementById('clearMasterFilter').addEventListener('click', function() {
+  document.querySelectorAll('.master-filter-btn').forEach(function(b) {
+    b.style.background = ''; b.style.color = '';
+  });
+  if (window._barberCalendar) {
+    var srcs = window._barberCalendar.getEventSources();
+    srcs.forEach(function(s) { s.remove(); });
+    window._barberCalendar.addEventSource({ url: '/appointments/api/events/', method: 'GET' });
+  }
+});
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js"></script>
+<script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}
