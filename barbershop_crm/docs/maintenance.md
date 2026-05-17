@@ -85,6 +85,18 @@ barbershop_crm/
 | `Appointment` | appointments | Записи клиентов |
 | `Payment` | billing | Оплата записей |
 
+### Автоматический расчёт времени окончания записи
+
+Поле `end_time` в модели `Appointment` заполняется автоматически при сохранении — на основе длительности выбранной услуги. Без этого поля FullCalendar не может отрисовать блок записи на временной шкале.
+
+```python
+# apps/appointments/models.py
+def save(self, *args, **kwargs):
+    if self.service_id and not self.end_time:
+        self.end_time = self.start_time + timedelta(minutes=self.service.duration)
+    super().save(*args, **kwargs)
+```
+
 ---
 
 ## 3. Резервное копирование
@@ -287,6 +299,49 @@ WorkSchedule.objects.filter(master_id=1).values(
    ```bash
    python manage.py collectstatic --noinput
    ```
+
+---
+
+### Двойная запись на один слот
+
+При одновременной отправке двух запросов от разных клиентов оба могут пройти проверку свободного слота и записаться в одно и то же время. Для исключения этой ситуации финальная проверка пересечений выполняется внутри `transaction.atomic()` с блокировкой строк через `select_for_update()` — второй запрос ждёт, пока первый не зафиксирует запись.
+
+```python
+# apps/booking/views.py — BookingSubmitView
+with transaction.atomic():
+    overlap = Appointment.objects.select_for_update().filter(
+        master=master,
+        start_time__lt=end_dt,
+        end_time__gt=start_dt,
+    ).exclude(status__in=[AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW])
+
+    if overlap.exists():
+        return JsonResponse(
+            {'error': 'Это время уже занято. Пожалуйста, выберите другой слот.'},
+            status=409
+        )
+    # Создание записи внутри той же транзакции
+    appt = Appointment.objects.create(...)
+```
+
+---
+
+### Неверные слоты из-за разницы часовых поясов
+
+PostgreSQL хранит `start_time` и `end_time` в UTC (timezone-aware). Расписание мастера (`WorkSchedule.start_time`) — это `time` без timezone, задаётся в локальном времени. При прямом сравнении слоты сдвигаются, и занятое время может выдаваться как свободное.
+
+Решение — перед сравнением конвертировать UTC-datetimes в локальное время и снять tzinfo:
+
+```python
+# apps/booking/views.py — SlotsAPIView
+local_existing = []
+for appt_start, appt_end in existing:
+    if appt_start and appt_start.tzinfo:
+        appt_start = timezone.localtime(appt_start).replace(tzinfo=None)
+    if appt_end and appt_end.tzinfo:
+        appt_end = timezone.localtime(appt_end).replace(tzinfo=None)
+    local_existing.append((appt_start, appt_end))
+```
 
 ---
 
