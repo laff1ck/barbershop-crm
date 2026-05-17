@@ -12,7 +12,9 @@ class Specialization(models.Model):
 
 class Master(models.Model):
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='master_profile'
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='master_profile'
     )
     display_name = models.CharField(max_length=150)
     bio = models.TextField(blank=True)

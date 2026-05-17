@@ -1,7 +1,26 @@
+from datetime import time
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from .models import UserProfile, Role
+
+
+def _setup_new_master(master):
+    """Assign all active services and default work schedule (Mon–Sat 10:00–20:00) to a new master."""
+    from apps.services.models import Service
+    from apps.staff.models import WorkSchedule
+    master.services.set(Service.objects.filter(is_active=True))
+    # Mon=0 … Sat=5 work days, Sun=6 day off
+    for weekday in range(7):
+        WorkSchedule.objects.get_or_create(
+            master=master,
+            weekday=weekday,
+            defaults={
+                'start_time': time(10, 0),
+                'end_time':   time(20, 0),
+                'is_day_off': weekday == 6,  # Sunday off
+            }
+        )
 
 
 class UserCreateForm(forms.ModelForm):
@@ -11,6 +30,11 @@ class UserCreateForm(forms.ModelForm):
     )
     role = forms.ChoiceField(
         label='Роль', choices=Role.choices
+    )
+    master_profile = forms.IntegerField(
+        label='Профиль мастера',
+        required=False,
+        widget=forms.HiddenInput(),
     )
 
     class Meta:
@@ -37,12 +61,36 @@ class UserCreateForm(forms.ModelForm):
                 user=user,
                 defaults={'role': self.cleaned_data['role']}
             )
+            if self.cleaned_data.get('role') == Role.MASTER:
+                from apps.staff.models import Master
+                master_pk = self.cleaned_data.get('master_profile')
+                if master_pk:
+                    # Link existing master profile
+                    try:
+                        master = Master.objects.get(pk=master_pk)
+                        master.user = user
+                        master.save(update_fields=['user'])
+                    except Master.DoesNotExist:
+                        pass
+                else:
+                    # Auto-create master profile so user appears on booking page
+                    display_name = (
+                        f"{user.first_name} {user.last_name}".strip()
+                        or user.username
+                    )
+                    master = Master.objects.create(user=user, display_name=display_name)
+                    _setup_new_master(master)
         return user
 
 
 class UserEditForm(forms.ModelForm):
-    role = forms.ChoiceField(label='Роль', choices=Role.choices)
+    role      = forms.ChoiceField(label='Роль', choices=Role.choices)
     is_active = forms.BooleanField(label='Активен', required=False)
+    master_profile = forms.IntegerField(
+        label='Профиль мастера',
+        required=False,
+        widget=forms.HiddenInput(),
+    )
 
     class Meta:
         model  = User
@@ -65,6 +113,26 @@ class UserEditForm(forms.ModelForm):
                 user=user,
                 defaults={'role': self.cleaned_data['role']}
             )
+            if self.cleaned_data.get('role') == Role.MASTER:
+                from apps.staff.models import Master
+                master_pk = self.cleaned_data.get('master_profile')
+                if master_pk:
+                    # Link existing master profile
+                    try:
+                        master = Master.objects.get(pk=master_pk)
+                        master.user = user
+                        master.save(update_fields=['user'])
+                    except Master.DoesNotExist:
+                        pass
+                else:
+                    # Auto-create master profile if user doesn't have one yet
+                    if not Master.objects.filter(user=user).exists():
+                        display_name = (
+                            f"{user.first_name} {user.last_name}".strip()
+                            or user.username
+                        )
+                        master = Master.objects.create(user=user, display_name=display_name)
+                        _setup_new_master(master)
         return user
 
 

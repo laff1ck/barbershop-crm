@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     resources:               resources,
     resourceAreaHeaderContent: 'Мастера',
-    resourceAreaWidth:       '160px',
+    resourceAreaWidth:       '180px',
     resourceLabelContent: function (arg) {
       return {
         html: '<div class="fc-resource-label">'
@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function () {
     events: {
       url:     '/appointments/api/events/',
       method:  'GET',
-      failure: function () { showToast('Ошибка загрузки записей', 'danger'); }
     },
 
     height:                'auto',
@@ -90,13 +89,9 @@ document.addEventListener('DOMContentLoaded', function () {
     weekNumbers:           false,
     allDaySlot:            false,
 
-    scrollTime: (function () {
-      var h = new Date().getHours();
-      h = Math.max(10, Math.min(h - 1, 20));
-      return h + ':00:00';
-    })(),
+    scrollTime: '10:00:00',
 
-    slotMinWidth: 60,
+    slotMinWidth: 90,
 
     editable:  true,
     droppable: true,
@@ -116,18 +111,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Improved event card ──────────────────────────────────────────────────
     eventContent: function (arg) {
-      var p       = arg.event.extendedProps;
-      var start   = arg.event.start;
-      var end     = arg.event.end;
-      var timeStr = formatTime(start) + (end ? '–' + formatTime(end) : '');
-      var clientName = escHtml(arg.event.title.split(' — ')[0]);
+      var p          = arg.event.extendedProps;
+      var start      = arg.event.start;
+      var end        = arg.event.end;
+      var startStr   = formatTime(start);
+      var endStr     = end ? formatTime(end) : '';
+      var clientName = escHtml(p.client_name || arg.event.title.split(' — ')[0]);
       var service    = escHtml(p.service || '');
       var price      = p.price ? p.price + ' ₽' : '';
+
+      // Time rendered as two separate spans so the end time can wrap
+      var timeHtml = '<div class="fc-event-card-time">'
+        + '<span class="evt-time-start">' + startStr + '</span>'
+        + (endStr
+            ? '<span class="evt-time-sep">–</span>'
+            + '<span class="evt-time-end">' + endStr + '</span>'
+            : '')
+        + '</div>';
 
       return {
         html: '<div class="fc-event-card">'
           + '<div class="fc-event-card-header">'
-          +   '<span class="fc-event-card-time">' + timeStr + '</span>'
+          +   timeHtml
           +   '<span class="fc-event-card-status status-dot-' + p.status + '"></span>'
           + '</div>'
           + '<div class="fc-event-card-name">' + clientName + '</div>'
@@ -141,6 +146,16 @@ document.addEventListener('DOMContentLoaded', function () {
     eventClick: function (info) {
       info.jsEvent.preventDefault();
       showApptPopup(info.event);
+    },
+
+    // ── Adaptive card: only hides price on very narrow cards ────────────────
+    eventDidMount: function (info) {
+      var card = info.el.querySelector('.fc-event-card');
+      if (!card) return;
+      var w = info.el.offsetWidth;
+      card.classList.remove('card-xs', 'card-xxs');
+      if (w < 60)       card.classList.add('card-xxs');
+      else if (w < 110) card.classList.add('card-xs');
     },
 
     loading: function (isLoading) {
