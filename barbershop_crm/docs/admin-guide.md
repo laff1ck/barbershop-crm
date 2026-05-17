@@ -37,9 +37,6 @@
 | Статус | pending / confirmed / in_progress / done / cancelled / no_show |
 | Поиск | По имени или телефону клиента |
 ### 3.2. Статусы записей
-pending → confirmed → in_progress → done
-                  ↘              ↘
-               cancelled       no_show
 | Статус | Значение |
 |--------|----------|
 | `pending` | Ожидает подтверждения |
